@@ -3,13 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NFC Drag Builder</title>
+<title>NFC Profil</title>
 
 <style>
+:root {
+  --bg:#0f0f10;
+  --card:#1a1a1d;
+  --accent:#6a5cff;
+}
 body {
   margin:0;
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  background:#0f0f10;
+  background:var(--bg);
   color:#fff;
 }
 .app {
@@ -17,107 +22,103 @@ body {
   margin:auto;
   padding:20px;
 }
+
+/* ===== HEADER ===== */
+.header {
+  text-align:center;
+  margin-bottom:30px;
+}
+.avatar {
+  width:120px;
+  height:120px;
+  border-radius:50%;
+  background:#333;
+  margin:0 auto 12px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:14px;
+  color:#aaa;
+}
+.header input {
+  width:100%;
+  background:none;
+  border:none;
+  border-bottom:1px solid #333;
+  color:#fff;
+  font-size:16px;
+  text-align:center;
+  margin-bottom:10px;
+  padding:6px;
+}
+.save-contact {
+  margin-top:10px;
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:none;
+  background:var(--accent);
+  color:#000;
+  font-weight:700;
+}
+
+/* ===== GRID ===== */
+.grid {
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px;
+}
 .widget {
-  background:#1a1a1d;
-  border-radius:14px;
-  padding:14px;
-  margin-bottom:12px;
+  background:var(--card);
+  border-radius:16px;
+  height:140px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:600;
   cursor:grab;
 }
 .widget.dragging {
   opacity:.5;
-}
-textarea,input {
-  width:100%;
-  border:none;
-  border-radius:10px;
-  padding:10px;
-  font-size:15px;
-  margin-top:6px;
-}
-img {
-  width:100%;
-  border-radius:10px;
-  margin-top:8px;
-}
-.fab {
-  position:fixed;
-  right:16px;
-  bottom:16px;
-  width:56px;
-  height:56px;
-  border-radius:50%;
-  background:linear-gradient(135deg,#6a5cff,#00e0ff);
-  border:none;
-  font-size:30px;
-  cursor:pointer;
-}
-.drawer {
-  position:fixed;
-  right:-220px;
-  top:0;
-  height:100%;
-  width:200px;
-  background:#1a1a1d;
-  padding:20px;
-  transition:.3s;
-}
-.drawer.open { right:0; }
-.drawer button {
-  width:100%;
-  padding:12px;
-  margin-bottom:10px;
-  border:none;
-  border-radius:10px;
-  font-weight:600;
-}
-.save {
-  width:100%;
-  margin-top:20px;
-  padding:14px;
-  border-radius:14px;
-  border:none;
-  background:linear-gradient(135deg,#6a5cff,#00e0ff);
-  font-weight:700;
 }
 </style>
 </head>
 
 <body>
 
-<div class="app" id="list"></div>
-<button class="save" onclick="save()">Uložit</button>
+<div class="app">
 
-<button class="fab" onclick="toggle()">+</button>
+  <!-- HEADER -->
+  <div class="header">
+    <div class="avatar">fotka</div>
+    <input id="name" placeholder="Jméno">
+    <input id="phone" placeholder="Tel. číslo">
+    <button class="save-contact">ULOŽIT</button>
+  </div>
 
-<div class="drawer" id="drawer">
-  <button onclick="addText()">Text</button>
-  <button onclick="addPhoto()">Fotka</button>
+  <!-- WIDGET GRID -->
+  <div class="grid" id="grid"></div>
+
 </div>
 
 <script>
-const KEY="nfc-dnd";
-let widgets=JSON.parse(localStorage.getItem(KEY))||[];
+const KEY="nfc-grid";
+let widgets = JSON.parse(localStorage.getItem(KEY)) || [
+  {label:"Instagram"},
+  {label:"Web"},
+  {label:"Facebook"},
+  {label:"Widget"}
+];
+
 let dragIndex=null;
-
-function toggle(){
-  drawer.classList.toggle("open");
-}
-
-function addText(){
-  widgets.push({type:"text",value:""});
-  toggle(); render();
-}
-function addPhoto(){
-  widgets.push({type:"photo",value:""});
-  toggle(); render();
-}
+const grid=document.getElementById("grid");
 
 function render(){
-  list.innerHTML="";
+  grid.innerHTML="";
   widgets.forEach((w,i)=>{
     const d=document.createElement("div");
     d.className="widget";
+    d.textContent=w.label;
     d.draggable=true;
 
     d.ondragstart=()=>{dragIndex=i; d.classList.add("dragging");};
@@ -125,32 +126,21 @@ function render(){
     d.ondragover=e=>e.preventDefault();
     d.ondrop=()=>swap(i);
 
-    if(w.type==="text"){
-      d.innerHTML=`<textarea placeholder="Text..." 
-        oninput="widgets[${i}].value=this.value">${w.value}</textarea>`;
-    }
-    if(w.type==="photo"){
-      d.innerHTML=`<input placeholder="URL fotky" 
-        oninput="widgets[${i}].value=this.value" value="${w.value}">
-        ${w.value?`<img src="${w.value}">`:""}`;
-    }
-    list.appendChild(d);
+    grid.appendChild(d);
   });
 }
-
 function swap(i){
   if(dragIndex===null) return;
   [widgets[i],widgets[dragIndex]]=[widgets[dragIndex],widgets[i]];
   dragIndex=null;
+  save();
   render();
 }
-
 function save(){
   localStorage.setItem(KEY,JSON.stringify(widgets));
-  alert("Uloženo ✔️");
 }
-
 render();
 </script>
+
 </body>
 </html>
