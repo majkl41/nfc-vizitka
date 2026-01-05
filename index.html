@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NFC Vizitka</title>
+  <title>NFC Widget Profil</title>
 
   <style>
     body {
@@ -12,174 +12,128 @@
       background: #0f0f10;
       color: #fff;
     }
-    .card {
+
+    .app {
       max-width: 420px;
-      margin: 40px auto;
-      background: #1a1a1d;
-      border-radius: 18px;
-      padding: 24px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      margin: 30px auto;
+      padding: 20px;
     }
-    .avatar {
-      width: 90px;
-      height: 90px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #6a5cff, #00e0ff);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 36px;
-      font-weight: bold;
-      margin: 0 auto 16px;
-    }
-    h1 {
-      text-align: center;
-      margin: 0;
-      font-size: 24px;
-    }
-    p.subtitle {
-      text-align: center;
-      color: #aaa;
-      margin: 6px 0 24px;
-      font-size: 14px;
-    }
-    .info {
-      background: #111;
-      border-radius: 12px;
-      padding: 16px;
-      margin-bottom: 16px;
-    }
-    .info div {
-      margin-bottom: 10px;
-      font-size: 15px;
-    }
-    .info span {
-      color: #aaa;
-      font-size: 13px;
-    }
-    button {
+
+    .toolbar button {
       width: 100%;
       padding: 14px;
+      margin-bottom: 10px;
       border-radius: 12px;
       border: none;
-      font-size: 16px;
       font-weight: 600;
       cursor: pointer;
     }
-    .primary {
-      background: linear-gradient(135deg, #6a5cff, #00e0ff);
-      color: #000;
-      margin-bottom: 10px;
+
+    .add-text { background: #6a5cff; color: #000; }
+    .add-photo { background: #00e0ff; color: #000; }
+
+    .widget {
+      background: #1a1a1d;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 12px;
     }
-    .secondary {
-      background: #2a2a2e;
-      color: #fff;
-    }
-    input {
+
+    .widget img {
       width: 100%;
-      padding: 12px;
+      border-radius: 12px;
+    }
+
+    input, textarea {
+      width: 100%;
+      padding: 10px;
       border-radius: 10px;
       border: none;
-      margin-bottom: 10px;
+      margin-top: 8px;
       font-size: 15px;
     }
-    .hidden { display: none; }
-    footer {
-      text-align: center;
-      font-size: 12px;
-      color: #666;
+
+    .save {
       margin-top: 20px;
+      padding: 14px;
+      width: 100%;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, #6a5cff, #00e0ff);
+      font-weight: 700;
+      cursor: pointer;
+      color: #000;
     }
   </style>
 </head>
 <body>
 
-<div class="card">
-  <div class="avatar" id="avatar">N</div>
+<div class="app">
 
-  <div id="view">
-    <h1 id="vName">NFC Vizitka</h1>
-    <p class="subtitle" id="vTitle">Digitální kontakt</p>
-
-    <div class="info">
-      <div><span>Telefon</span><br><strong id="vPhone">—</strong></div>
-      <div><span>Web</span><br><strong id="vWeb">—</strong></div>
-      <div><span>Instagram</span><br><strong id="vIg">—</strong></div>
-      <div><span>Facebook</span><br><strong id="vFb">—</strong></div>
-    </div>
-
-    <button class="primary" onclick="openEdit()">Upravit profil</button>
+  <div class="toolbar">
+    <button class="add-text" onclick="addText()">➕ Přidat text</button>
+    <button class="add-photo" onclick="addPhoto()">➕ Přidat fotku</button>
   </div>
 
-  <div id="edit" class="hidden">
-    <input id="inputName" placeholder="Jméno / firma">
-    <input id="inputTitle" placeholder="Pozice / popis">
-    <input id="inputPhone" placeholder="Telefon">
-    <input id="inputWeb" placeholder="Web">
-    <input id="inputIg" placeholder="Instagram">
-    <input id="inputFb" placeholder="Facebook">
-    <button class="primary" onclick="save()">Uložit</button>
-    <button class="secondary" onclick="cancel()">Zrušit</button>
-  </div>
+  <div id="widgets"></div>
+
+  <button class="save" onclick="saveProfile()">Uložit profil</button>
+
 </div>
 
-<footer>NFC vizitka • testovací verze</footer>
-
 <script>
-  const key = "nfc-profile";
+  const STORAGE_KEY = "nfc-widgets";
+  let widgets = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
 
-  const view = document.getElementById("view");
-  const editBox = document.getElementById("edit");
+  function render() {
+    const container = document.getElementById("widgets");
+    container.innerHTML = "";
 
-  const inputName = document.getElementById("inputName");
-  const inputTitle = document.getElementById("inputTitle");
-  const inputPhone = document.getElementById("inputPhone");
-  const inputWeb = document.getElementById("inputWeb");
-  const inputIg = document.getElementById("inputIg");
-  const inputFb = document.getElementById("inputFb");
+    widgets.forEach((w, i) => {
+      const div = document.createElement("div");
+      div.className = "widget";
 
-  function openEdit() {
-    view.classList.add("hidden");
-    editBox.classList.remove("hidden");
+      if (w.type === "text") {
+        div.innerHTML = `
+          <strong>Text</strong>
+          <textarea placeholder="Napiš text..." oninput="update(${i}, this.value)">${w.value}</textarea>
+        `;
+      }
+
+      if (w.type === "photo") {
+        div.innerHTML = `
+          <strong>Fotka (URL)</strong>
+          <input placeholder="https://..." value="${w.value}"
+                 oninput="update(${i}, this.value)">
+          ${w.value ? `<img src="${w.value}">` : ""}
+        `;
+      }
+
+      container.appendChild(div);
+    });
   }
 
-  function cancel() {
-    editBox.classList.add("hidden");
-    view.classList.remove("hidden");
+  function addText() {
+    widgets.push({ type: "text", value: "" });
+    render();
   }
 
-  function save() {
-    const data = {
-      name: inputName.value,
-      title: inputTitle.value,
-      phone: inputPhone.value,
-      web: inputWeb.value,
-      ig: inputIg.value,
-      fb: inputFb.value
-    };
-    localStorage.setItem(key, JSON.stringify(data));
-    location.reload();
+  function addPhoto() {
+    widgets.push({ type: "photo", value: "" });
+    render();
   }
 
-  function load() {
-    const data = JSON.parse(localStorage.getItem(key));
-    if (!data) {
-      openEdit();
-      return;
-    }
-
-    document.getElementById("vName").innerText = data.name;
-    document.getElementById("vTitle").innerText = data.title;
-    document.getElementById("vPhone").innerText = data.phone;
-    document.getElementById("vWeb").innerText = data.web;
-    document.getElementById("vIg").innerText = data.ig;
-    document.getElementById("vFb").innerText = data.fb;
-
-    document.getElementById("avatar").innerText =
-      data.name ? data.name.charAt(0).toUpperCase() : "N";
+  function update(index, value) {
+    widgets[index].value = value;
+    render();
   }
 
-  load();
+  function saveProfile() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(widgets));
+    alert("Uloženo ✔️");
+  }
+
+  render();
 </script>
 
 </body>
