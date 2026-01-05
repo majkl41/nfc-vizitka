@@ -15,33 +15,32 @@
 
     .app {
       max-width: 420px;
-      margin: 30px auto;
+      margin: auto;
       padding: 20px;
     }
-
-    .toolbar button {
-      width: 100%;
-      padding: 14px;
-      margin-bottom: 10px;
-      border-radius: 12px;
-      border: none;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .add-text { background: #6a5cff; color: #000; }
-    .add-photo { background: #00e0ff; color: #000; }
 
     .widget {
       background: #1a1a1d;
       border-radius: 14px;
-      padding: 16px;
+      padding: 14px;
       margin-bottom: 12px;
+      position: relative;
     }
 
-    .widget img {
-      width: 100%;
-      border-radius: 12px;
+    .widget-controls {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 6px;
+    }
+
+    .widget-controls button {
+      background: #2a2a2e;
+      border: none;
+      color: #fff;
+      border-radius: 8px;
+      padding: 4px 8px;
+      cursor: pointer;
+      font-size: 12px;
     }
 
     input, textarea {
@@ -49,18 +48,77 @@
       padding: 10px;
       border-radius: 10px;
       border: none;
-      margin-top: 8px;
+      margin-top: 6px;
       font-size: 15px;
     }
 
-    .save {
-      margin-top: 20px;
-      padding: 14px;
+    textarea { resize: vertical; }
+
+    img {
       width: 100%;
+      border-radius: 10px;
+      margin-top: 8px;
+    }
+
+    /* FLOAT BUTTON */
+    .fab {
+      position: fixed;
+      right: 16px;
+      bottom: 16px;
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6a5cff, #00e0ff);
+      color: #000;
+      font-size: 32px;
+      border: none;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    /* DRAWER */
+    .drawer {
+      position: fixed;
+      top: 0;
+      right: -240px;
+      width: 220px;
+      height: 100%;
+      background: #1a1a1d;
+      padding: 20px;
+      transition: right 0.3s ease;
+      z-index: 9;
+      box-shadow: -10px 0 30px rgba(0,0,0,0.5);
+    }
+
+    .drawer.open {
+      right: 0;
+    }
+
+    .drawer h3 {
+      margin-top: 0;
+    }
+
+    .drawer button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      border: none;
+      margin-bottom: 10px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .add-text { background: #6a5cff; color: #000; }
+    .add-photo { background: #00e0ff; color: #000; }
+
+    .save {
+      width: 100%;
+      padding: 14px;
       border-radius: 14px;
       border: none;
       background: linear-gradient(135deg, #6a5cff, #00e0ff);
       font-weight: 700;
+      margin-top: 20px;
       cursor: pointer;
       color: #000;
     }
@@ -69,21 +127,25 @@
 <body>
 
 <div class="app">
-
-  <div class="toolbar">
-    <button class="add-text" onclick="addText()">➕ Přidat text</button>
-    <button class="add-photo" onclick="addPhoto()">➕ Přidat fotku</button>
-  </div>
-
   <div id="widgets"></div>
-
   <button class="save" onclick="saveProfile()">Uložit profil</button>
+</div>
 
+<button class="fab" onclick="toggleDrawer()">+</button>
+
+<div class="drawer" id="drawer">
+  <h3>Přidat</h3>
+  <button class="add-text" onclick="addText()">Text</button>
+  <button class="add-photo" onclick="addPhoto()">Fotku</button>
 </div>
 
 <script>
   const STORAGE_KEY = "nfc-widgets";
   let widgets = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+  function toggleDrawer() {
+    document.getElementById("drawer").classList.toggle("open");
+  }
 
   function render() {
     const container = document.getElementById("widgets");
@@ -93,18 +155,24 @@
       const div = document.createElement("div");
       div.className = "widget";
 
+      div.innerHTML = `
+        <div class="widget-controls">
+          <button onclick="moveUp(${i})">⬆️</button>
+          <button onclick="moveDown(${i})">⬇️</button>
+          <button onclick="removeWidget(${i})">🗑️</button>
+        </div>
+      `;
+
       if (w.type === "text") {
-        div.innerHTML = `
-          <strong>Text</strong>
-          <textarea placeholder="Napiš text..." oninput="update(${i}, this.value)">${w.value}</textarea>
+        div.innerHTML += `
+          <textarea placeholder="Text…" oninput="update(${i}, this.value)">${w.value}</textarea>
         `;
       }
 
       if (w.type === "photo") {
-        div.innerHTML = `
-          <strong>Fotka (URL)</strong>
-          <input placeholder="https://..." value="${w.value}"
-                 oninput="update(${i}, this.value)">
+        div.innerHTML += `
+          <input placeholder="URL obrázku" value="${w.value}"
+            oninput="update(${i}, this.value)">
           ${w.value ? `<img src="${w.value}">` : ""}
         `;
       }
@@ -115,16 +183,35 @@
 
   function addText() {
     widgets.push({ type: "text", value: "" });
+    toggleDrawer();
     render();
   }
 
   function addPhoto() {
     widgets.push({ type: "photo", value: "" });
+    toggleDrawer();
     render();
   }
 
-  function update(index, value) {
-    widgets[index].value = value;
+  function update(i, value) {
+    widgets[i].value = value;
+    render();
+  }
+
+  function moveUp(i) {
+    if (i === 0) return;
+    [widgets[i-1], widgets[i]] = [widgets[i], widgets[i-1]];
+    render();
+  }
+
+  function moveDown(i) {
+    if (i === widgets.length - 1) return;
+    [widgets[i+1], widgets[i]] = [widgets[i], widgets[i+1]];
+    render();
+  }
+
+  function removeWidget(i) {
+    widgets.splice(i, 1);
     render();
   }
 
