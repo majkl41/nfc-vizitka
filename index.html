@@ -1,227 +1,156 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>NFC Widget Profil</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFC Drag Builder</title>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: #0f0f10;
-      color: #fff;
-    }
-
-    .app {
-      max-width: 420px;
-      margin: auto;
-      padding: 20px;
-    }
-
-    .widget {
-      background: #1a1a1d;
-      border-radius: 14px;
-      padding: 14px;
-      margin-bottom: 12px;
-      position: relative;
-    }
-
-    .widget-controls {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 6px;
-    }
-
-    .widget-controls button {
-      background: #2a2a2e;
-      border: none;
-      color: #fff;
-      border-radius: 8px;
-      padding: 4px 8px;
-      cursor: pointer;
-      font-size: 12px;
-    }
-
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      border-radius: 10px;
-      border: none;
-      margin-top: 6px;
-      font-size: 15px;
-    }
-
-    textarea { resize: vertical; }
-
-    img {
-      width: 100%;
-      border-radius: 10px;
-      margin-top: 8px;
-    }
-
-    /* FLOAT BUTTON */
-    .fab {
-      position: fixed;
-      right: 16px;
-      bottom: 16px;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #6a5cff, #00e0ff);
-      color: #000;
-      font-size: 32px;
-      border: none;
-      cursor: pointer;
-      z-index: 10;
-    }
-
-    /* DRAWER */
-    .drawer {
-      position: fixed;
-      top: 0;
-      right: -240px;
-      width: 220px;
-      height: 100%;
-      background: #1a1a1d;
-      padding: 20px;
-      transition: right 0.3s ease;
-      z-index: 9;
-      box-shadow: -10px 0 30px rgba(0,0,0,0.5);
-    }
-
-    .drawer.open {
-      right: 0;
-    }
-
-    .drawer h3 {
-      margin-top: 0;
-    }
-
-    .drawer button {
-      width: 100%;
-      padding: 12px;
-      border-radius: 10px;
-      border: none;
-      margin-bottom: 10px;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .add-text { background: #6a5cff; color: #000; }
-    .add-photo { background: #00e0ff; color: #000; }
-
-    .save {
-      width: 100%;
-      padding: 14px;
-      border-radius: 14px;
-      border: none;
-      background: linear-gradient(135deg, #6a5cff, #00e0ff);
-      font-weight: 700;
-      margin-top: 20px;
-      cursor: pointer;
-      color: #000;
-    }
-  </style>
+<style>
+body {
+  margin:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  background:#0f0f10;
+  color:#fff;
+}
+.app {
+  max-width:420px;
+  margin:auto;
+  padding:20px;
+}
+.widget {
+  background:#1a1a1d;
+  border-radius:14px;
+  padding:14px;
+  margin-bottom:12px;
+  cursor:grab;
+}
+.widget.dragging {
+  opacity:.5;
+}
+textarea,input {
+  width:100%;
+  border:none;
+  border-radius:10px;
+  padding:10px;
+  font-size:15px;
+  margin-top:6px;
+}
+img {
+  width:100%;
+  border-radius:10px;
+  margin-top:8px;
+}
+.fab {
+  position:fixed;
+  right:16px;
+  bottom:16px;
+  width:56px;
+  height:56px;
+  border-radius:50%;
+  background:linear-gradient(135deg,#6a5cff,#00e0ff);
+  border:none;
+  font-size:30px;
+  cursor:pointer;
+}
+.drawer {
+  position:fixed;
+  right:-220px;
+  top:0;
+  height:100%;
+  width:200px;
+  background:#1a1a1d;
+  padding:20px;
+  transition:.3s;
+}
+.drawer.open { right:0; }
+.drawer button {
+  width:100%;
+  padding:12px;
+  margin-bottom:10px;
+  border:none;
+  border-radius:10px;
+  font-weight:600;
+}
+.save {
+  width:100%;
+  margin-top:20px;
+  padding:14px;
+  border-radius:14px;
+  border:none;
+  background:linear-gradient(135deg,#6a5cff,#00e0ff);
+  font-weight:700;
+}
+</style>
 </head>
+
 <body>
 
-<div class="app">
-  <div id="widgets"></div>
-  <button class="save" onclick="saveProfile()">Uložit profil</button>
-</div>
+<div class="app" id="list"></div>
+<button class="save" onclick="save()">Uložit</button>
 
-<button class="fab" onclick="toggleDrawer()">+</button>
+<button class="fab" onclick="toggle()">+</button>
 
 <div class="drawer" id="drawer">
-  <h3>Přidat</h3>
-  <button class="add-text" onclick="addText()">Text</button>
-  <button class="add-photo" onclick="addPhoto()">Fotku</button>
+  <button onclick="addText()">Text</button>
+  <button onclick="addPhoto()">Fotka</button>
 </div>
 
 <script>
-  const STORAGE_KEY = "nfc-widgets";
-  let widgets = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+const KEY="nfc-dnd";
+let widgets=JSON.parse(localStorage.getItem(KEY))||[];
+let dragIndex=null;
 
-  function toggleDrawer() {
-    document.getElementById("drawer").classList.toggle("open");
-  }
+function toggle(){
+  drawer.classList.toggle("open");
+}
 
-  function render() {
-    const container = document.getElementById("widgets");
-    container.innerHTML = "";
+function addText(){
+  widgets.push({type:"text",value:""});
+  toggle(); render();
+}
+function addPhoto(){
+  widgets.push({type:"photo",value:""});
+  toggle(); render();
+}
 
-    widgets.forEach((w, i) => {
-      const div = document.createElement("div");
-      div.className = "widget";
+function render(){
+  list.innerHTML="";
+  widgets.forEach((w,i)=>{
+    const d=document.createElement("div");
+    d.className="widget";
+    d.draggable=true;
 
-      div.innerHTML = `
-        <div class="widget-controls">
-          <button onclick="moveUp(${i})">⬆️</button>
-          <button onclick="moveDown(${i})">⬇️</button>
-          <button onclick="removeWidget(${i})">🗑️</button>
-        </div>
-      `;
+    d.ondragstart=()=>{dragIndex=i; d.classList.add("dragging");};
+    d.ondragend=()=>d.classList.remove("dragging");
+    d.ondragover=e=>e.preventDefault();
+    d.ondrop=()=>swap(i);
 
-      if (w.type === "text") {
-        div.innerHTML += `
-          <textarea placeholder="Text…" oninput="update(${i}, this.value)">${w.value}</textarea>
-        `;
-      }
+    if(w.type==="text"){
+      d.innerHTML=`<textarea placeholder="Text..." 
+        oninput="widgets[${i}].value=this.value">${w.value}</textarea>`;
+    }
+    if(w.type==="photo"){
+      d.innerHTML=`<input placeholder="URL fotky" 
+        oninput="widgets[${i}].value=this.value" value="${w.value}">
+        ${w.value?`<img src="${w.value}">`:""}`;
+    }
+    list.appendChild(d);
+  });
+}
 
-      if (w.type === "photo") {
-        div.innerHTML += `
-          <input placeholder="URL obrázku" value="${w.value}"
-            oninput="update(${i}, this.value)">
-          ${w.value ? `<img src="${w.value}">` : ""}
-        `;
-      }
-
-      container.appendChild(div);
-    });
-  }
-
-  function addText() {
-    widgets.push({ type: "text", value: "" });
-    toggleDrawer();
-    render();
-  }
-
-  function addPhoto() {
-    widgets.push({ type: "photo", value: "" });
-    toggleDrawer();
-    render();
-  }
-
-  function update(i, value) {
-    widgets[i].value = value;
-    render();
-  }
-
-  function moveUp(i) {
-    if (i === 0) return;
-    [widgets[i-1], widgets[i]] = [widgets[i], widgets[i-1]];
-    render();
-  }
-
-  function moveDown(i) {
-    if (i === widgets.length - 1) return;
-    [widgets[i+1], widgets[i]] = [widgets[i], widgets[i+1]];
-    render();
-  }
-
-  function removeWidget(i) {
-    widgets.splice(i, 1);
-    render();
-  }
-
-  function saveProfile() {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(widgets));
-    alert("Uloženo ✔️");
-  }
-
+function swap(i){
+  if(dragIndex===null) return;
+  [widgets[i],widgets[dragIndex]]=[widgets[dragIndex],widgets[i]];
+  dragIndex=null;
   render();
-</script>
+}
 
+function save(){
+  localStorage.setItem(KEY,JSON.stringify(widgets));
+  alert("Uloženo ✔️");
+}
+
+render();
+</script>
 </body>
 </html>
