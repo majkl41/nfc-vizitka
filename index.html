@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>NFC Vizitka</title>
 
   <style>
@@ -32,18 +32,31 @@
       font-weight: bold;
       margin: 0 auto 16px;
     }
-    h1 { text-align: center; margin: 0; font-size: 24px; }
-    p.subtitle { text-align: center; color: #aaa; margin: 6px 0 24px; font-size: 14px; }
-
+    h1 {
+      text-align: center;
+      margin: 0;
+      font-size: 24px;
+    }
+    p.subtitle {
+      text-align: center;
+      color: #aaa;
+      margin: 6px 0 24px;
+      font-size: 14px;
+    }
     .info {
       background: #111;
       border-radius: 12px;
       padding: 16px;
       margin-bottom: 16px;
     }
-    .info div { margin-bottom: 10px; font-size: 15px; }
-    .info span { color: #aaa; font-size: 13px; }
-
+    .info div {
+      margin-bottom: 10px;
+      font-size: 15px;
+    }
+    .info span {
+      color: #aaa;
+      font-size: 13px;
+    }
     button {
       width: 100%;
       padding: 14px;
@@ -62,7 +75,6 @@
       background: #2a2a2e;
       color: #fff;
     }
-
     input {
       width: 100%;
       padding: 12px;
@@ -71,42 +83,44 @@
       margin-bottom: 10px;
       font-size: 15px;
     }
-
     .hidden { display: none; }
-    footer { text-align: center; font-size: 12px; color: #666; margin-top: 20px; }
+    footer {
+      text-align: center;
+      font-size: 12px;
+      color: #666;
+      margin-top: 20px;
+    }
   </style>
 </head>
 <body>
 
 <div class="card">
-
   <div class="avatar" id="avatar">N</div>
 
   <div id="view">
-    <h1 id="v-name">NFC Vizitka</h1>
-    <p class="subtitle" id="v-title">Digitální kontakt</p>
+    <h1 id="vName">NFC Vizitka</h1>
+    <p class="subtitle" id="vTitle">Digitální kontakt</p>
 
     <div class="info">
-      <div><span>Telefon</span><br><strong id="v-phone">—</strong></div>
-      <div><span>Web</span><br><strong id="v-web">—</strong></div>
-      <div><span>Instagram</span><br><strong id="v-ig">—</strong></div>
-      <div><span>Facebook</span><br><strong id="v-fb">—</strong></div>
+      <div><span>Telefon</span><br><strong id="vPhone">—</strong></div>
+      <div><span>Web</span><br><strong id="vWeb">—</strong></div>
+      <div><span>Instagram</span><br><strong id="vIg">—</strong></div>
+      <div><span>Facebook</span><br><strong id="vFb">—</strong></div>
     </div>
 
     <button class="primary" onclick="openEdit()">Upravit profil</button>
   </div>
 
   <div id="edit" class="hidden">
-    <input id="name" placeholder="Jméno / firma">
-    <input id="title" placeholder="Pozice / popis">
-    <input id="phone" placeholder="Telefon">
-    <input id="web" placeholder="Web">
-    <input id="ig" placeholder="Instagram">
-    <input id="fb" placeholder="Facebook">
+    <input id="inputName" placeholder="Jméno / firma">
+    <input id="inputTitle" placeholder="Pozice / popis">
+    <input id="inputPhone" placeholder="Telefon">
+    <input id="inputWeb" placeholder="Web">
+    <input id="inputIg" placeholder="Instagram">
+    <input id="inputFb" placeholder="Facebook">
     <button class="primary" onclick="save()">Uložit</button>
     <button class="secondary" onclick="cancel()">Zrušit</button>
   </div>
-
 </div>
 
 <footer>NFC vizitka • testovací verze</footer>
@@ -117,42 +131,52 @@
   const view = document.getElementById("view");
   const editBox = document.getElementById("edit");
 
-  function load() {
-    const data = JSON.parse(localStorage.getItem(key));
-    if (data) {
-      v-name.innerText = data.name;
-      v-title.innerText = data.title;
-      v-phone.innerText = data.phone;
-      v-web.innerText = data.web;
-      v-ig.innerText = data.ig;
-      v-fb.innerText = data.fb;
-      avatar.innerText = data.name.charAt(0).toUpperCase();
-    } else {
-      openEdit();
-    }
-  }
+  const inputName = document.getElementById("inputName");
+  const inputTitle = document.getElementById("inputTitle");
+  const inputPhone = document.getElementById("inputPhone");
+  const inputWeb = document.getElementById("inputWeb");
+  const inputIg = document.getElementById("inputIg");
+  const inputFb = document.getElementById("inputFb");
 
   function openEdit() {
     view.classList.add("hidden");
     editBox.classList.remove("hidden");
   }
 
+  function cancel() {
+    editBox.classList.add("hidden");
+    view.classList.remove("hidden");
+  }
+
   function save() {
     const data = {
-      name: name.value || "NFC Vizitka",
-      title: title.value || "",
-      phone: phone.value || "",
-      web: web.value || "",
-      ig: ig.value || "",
-      fb: fb.value || ""
+      name: inputName.value,
+      title: inputTitle.value,
+      phone: inputPhone.value,
+      web: inputWeb.value,
+      ig: inputIg.value,
+      fb: inputFb.value
     };
     localStorage.setItem(key, JSON.stringify(data));
     location.reload();
   }
 
-  function cancel() {
-    editBox.classList.add("hidden");
-    view.classList.remove("hidden");
+  function load() {
+    const data = JSON.parse(localStorage.getItem(key));
+    if (!data) {
+      openEdit();
+      return;
+    }
+
+    document.getElementById("vName").innerText = data.name;
+    document.getElementById("vTitle").innerText = data.title;
+    document.getElementById("vPhone").innerText = data.phone;
+    document.getElementById("vWeb").innerText = data.web;
+    document.getElementById("vIg").innerText = data.ig;
+    document.getElementById("vFb").innerText = data.fb;
+
+    document.getElementById("avatar").innerText =
+      data.name ? data.name.charAt(0).toUpperCase() : "N";
   }
 
   load();
