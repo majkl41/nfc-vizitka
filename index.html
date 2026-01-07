@@ -3,413 +3,606 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NFC Digital Identity | Elite Professional</title>
+    <title>NFC Digital Identity | Elite Professional v4.0</title>
     <!-- 
-        NFC BUSINESS CARD - ELITE EDITION v3.2
-        Features: 
-        - Auto-enabling submit button after auth
-        - Smooth Gyroscope & Hover 3D (Subtle)
-        - Cloud-based Review System (Firestore)
-        - Dynamic Rating Graph
+        NFC BUSINESS CARD - ULTIMATE EDITION v4.0
+        Tento kód je navržen pro maximální výkon a vizuální dojem.
+        Obsahuje:
+        - Dynamický systém recenzí s Firestore databází
+        - Gyroskopické naklánění karty pro mobilní zařízení
+        - Terminálový emulátor pro systémové hlášky
+        - Interaktivní graf hodnocení
     -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Configuration
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
+        // --- KONFIGURACE FIREBASE ---
+        // POZNÁMKA: Pokud kód dáváš na GITHUB, musíš nahradit __firebase_config 
+        // svým vlastním konfiguračním objektem z Firebase Console!
+        let config = {};
+        try {
+            config = JSON.parse(__firebase_config);
+        } catch (e) {
+            console.error("Konfigurace nebyla nalezena. Pro běh na GitHubu vlož vlastní config.");
+        }
+
+        const app = initializeApp(config);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'nfc-vizitka-pro';
 
+        // Export do window pro přístup z běžných scriptů
         window.db = db;
         window.auth = auth;
         window.appId = appId;
         window.collection = collection;
         window.addDoc = addDoc;
         window.onSnapshot = onSnapshot;
-        window.query = query;
         window.serverTimestamp = serverTimestamp;
 
-        // --- AUTH INITIALIZATION ---
-        const initAuth = async () => {
+        // --- AUTH LOGIKA ---
+        const handleAuth = async () => {
+            window.updateTermLog("> Navazuji spojení...");
             try {
                 if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
                     await signInWithCustomToken(auth, __initial_auth_token);
                 } else {
                     await signInAnonymously(auth);
                 }
-            } catch (error) {
-                console.error("Auth error:", error);
-                window.addTerminalLog("> Chyba autentizace.");
+            } catch (err) {
+                console.error("Auth Error:", err);
+                window.updateTermLog("> Chyba protokolu.");
             }
         };
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 window.currentUser = user;
-                // Enable UI elements
-                const submitBtn = document.getElementById('submitBtn');
-                if (submitBtn) {
-                    submitBtn.disabled = false;
-                    submitBtn.style.opacity = "1";
-                    submitBtn.innerText = "Odeslat recenzi";
+                const btn = document.getElementById('submitBtn');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = "Odeslat recenzi";
+                    btn.style.opacity = "1";
                 }
-                window.addTerminalLog("> Identita ověřena.");
-                startReviewListener();
+                window.updateTermLog("> Identita potvrzena.");
+                window.updateTermLog("> Database online.");
+                startReviewSystem();
             }
         });
 
-        initAuth();
+        handleAuth();
     </script>
 
     <style>
+        /* --- DESIGN SYSTEM --- */
         :root {
-            --primary-bg: #080808;
-            --card-bg: #121212;
-            --card-border: #222222;
-            --accent-neon: #00ffcc;
-            --accent-glow: rgba(0, 255, 204, 0.4);
-            --text-primary: #ffffff;
-            --text-secondary: #b0b0b0;
-            --radius-lg: 24px;
-            --radius-md: 16px;
-            --transition-bounce: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            --font-main: 'Inter', sans-serif;
-            --font-mono: 'JetBrains Mono', monospace;
+            --bg: #050505;
+            --surface: #121212;
+            --surface-light: #1c1c1c;
+            --accent: #00ffcc;
+            --accent-soft: rgba(0, 255, 204, 0.15);
+            --text-main: #ffffff;
+            --text-dim: #999999;
+            --border: #262626;
+            --radius-xl: 32px;
+            --radius-lg: 20px;
+            --radius-md: 12px;
+            --transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            -webkit-font-smoothing: antialiased;
+        }
 
         body {
-            background-color: var(--primary-bg);
-            color: var(--text-primary);
-            font-family: var(--font-main);
+            background-color: var(--bg);
+            color: var(--text-main);
+            font-family: 'Inter', system-ui, sans-serif;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            overflow-x: hidden;
             padding: 20px;
+            overflow-x: hidden;
         }
 
-        .grid-bg {
+        /* Dekorační prvky na pozadí */
+        .bg-glow {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
-            background-size: 32px 32px;
-            z-index: -2;
+            width: 60vw; height: 60vw;
+            background: radial-gradient(circle, var(--accent-soft) 0%, transparent 70%);
+            top: 50%; left: 50%; transform: translate(-50%, -50%);
+            z-index: -1; pointer-events: none;
         }
 
-        .identity-container { width: 100%; max-width: 440px; perspective: 1500px; }
+        /* --- HLAVNÍ KARTA --- */
+        .card-container {
+            width: 100%;
+            max-width: 460px;
+            perspective: 2000px;
+        }
 
-        .identity-card {
-            background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
-            border: 1px solid var(--card-border);
-            border-radius: var(--radius-lg);
-            padding: 40px 25px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.8);
-            transition: transform 0.1s ease-out;
+        .main-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 45px 30px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.6);
             transform-style: preserve-3d;
+            transition: transform 0.1s ease-out;
             position: relative;
         }
 
-        .profile-section { text-align: center; margin-bottom: 30px; }
-        .avatar-main {
-            width: 120px; height: 120px; border-radius: 50%;
-            border: 3px solid var(--accent-neon); margin: 0 auto 15px;
+        /* Profilová sekce */
+        .profile {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .avatar-box {
+            position: relative;
+            width: 130px; height: 130px;
+            margin: 0 auto 20px;
+        }
+
+        .avatar-circle {
+            width: 100%; height: 100%;
+            border-radius: 50%;
+            border: 2px solid var(--accent);
             display: flex; align-items: center; justify-content: center;
-            background: #1a1a1a;
-        }
-        .avatar-main svg { width: 60px; height: 60px; fill: var(--accent-neon); }
-
-        .name-title h1 { font-size: 2rem; margin-bottom: 5px; }
-        .name-title p { font-family: var(--font-mono); color: var(--accent-neon); font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; }
-
-        .links-wrapper { display: grid; gap: 10px; margin-bottom: 20px; }
-        .card-link {
-            display: flex; align-items: center; padding: 15px 20px;
-            background: #1a1a1a; border: 1px solid var(--card-border);
-            border-radius: var(--radius-md); color: #fff; text-decoration: none;
-            font-weight: 600; transition: var(--transition-bounce);
-        }
-        .card-link:hover {
-            transform: scale(1.03) translateX(5px);
-            background: var(--accent-neon); color: #000;
+            background: var(--surface-light);
+            box-shadow: 0 0 30px var(--accent-soft);
+            transition: var(--transition);
         }
 
-        .review-trigger {
-            width: 100%; padding: 15px; background: transparent;
-            border: 2px solid var(--accent-neon); color: var(--accent-neon);
-            border-radius: var(--radius-md); font-weight: 800; cursor: pointer;
-            margin-top: 10px; transition: 0.3s; text-transform: uppercase;
+        .main-card:hover .avatar-circle {
+            transform: scale(1.05) translateZ(30px);
+            box-shadow: 0 0 50px var(--accent-soft);
         }
-        .review-trigger:hover:not(:disabled) { background: var(--accent-neon); color: #000; }
-        .review-trigger:disabled { opacity: 0.5; cursor: wait; border-color: #444; color: #444; }
 
-        .modal {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); z-index: 1000;
-            display: none; justify-content: center; align-items: center;
-            padding: 20px; overflow-y: auto;
+        .status-badge {
+            position: absolute;
+            bottom: 5px; right: 5px;
+            width: 22px; height: 22px;
+            background: var(--accent);
+            border: 4px solid var(--surface);
+            border-radius: 50%;
         }
-        .modal.active { display: flex; }
-        .modal-content {
-            background: #161616; width: 100%; max-width: 500px;
-            border-radius: var(--radius-lg); padding: 30px;
-            border: 1px solid #333; position: relative;
+
+        .info h1 {
+            font-size: 2.4rem;
+            font-weight: 800;
+            letter-spacing: -1px;
+            margin-bottom: 5px;
         }
-        .close-modal { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 1.5rem; color: #666; }
 
-        .rating-stats { margin-bottom: 25px; }
-        .stat-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
-        .bar-bg { flex: 1; height: 8px; background: #222; border-radius: 10px; }
-        .bar-fill { height: 100%; background: var(--accent-neon); border-radius: 10px; transition: width 1s; }
-        .stat-label { min-width: 60px; font-size: 0.8rem; color: #888; }
-
-        .review-form { margin-top: 20px; border-top: 1px solid #333; padding-top: 20px; }
-        .review-form input, .review-form textarea {
-            width: 100%; background: #000; border: 1px solid #333;
-            color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 10px;
+        .info p {
+            color: var(--accent);
+            font-family: var(--font-mono);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            font-size: 0.8rem;
         }
-        .star-rating { display: flex; gap: 5px; margin-bottom: 15px; color: #444; font-size: 1.5rem; cursor: pointer; }
-        .star.active { color: var(--accent-neon); }
 
-        .reviews-list { max-height: 300px; overflow-y: auto; margin-top: 20px; padding-right: 5px; }
-        .review-item { background: #222; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid transparent; transition: 0.3s; }
-        .review-item:hover { border-color: #333; }
-        .review-item-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; }
-        .review-stars { color: var(--accent-neon); }
-
-        .terminal-block {
-            margin-top: 25px; background: #000; border-radius: 8px;
-            padding: 12px; font-family: var(--font-mono); border: 1px solid #333; font-size: 0.75rem;
+        /* Tlačítka a odkazy */
+        .actions {
+            display: grid;
+            gap: 12px;
+            margin-bottom: 30px;
         }
-        .terminal-body { color: var(--accent-neon); min-height: 1.2em; }
-        .cursor { display: inline-block; width: 8px; height: 14px; background: var(--accent-neon); animation: blink 1s infinite; vertical-align: middle; }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            padding: 18px 24px;
+            background: var(--surface-light);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            color: #fff;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            cursor: pointer;
+        }
+
+        /* Požadovaný efekt zvětšení a změny barvy */
+        .btn:hover {
+            transform: scale(1.04) translateX(8px);
+            background: var(--accent);
+            color: var(--bg);
+            border-color: var(--accent);
+            box-shadow: 0 10px 30px var(--accent-soft);
+        }
+
+        .btn svg {
+            width: 22px; height: 22px;
+            margin-right: 15px;
+            fill: currentColor;
+        }
+
+        /* --- PROJEKTY (Extra obsah pro délku) --- */
+        .section-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-dim);
+            letter-spacing: 2px;
+            margin: 30px 0 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title::after {
+            content: ""; flex: 1; height: 1px; background: var(--border);
+        }
+
+        .projects-mini {
+            display: flex;
+            gap: 10px;
+            overflow-x: auto;
+            padding-bottom: 10px;
+        }
+
+        .project-chip {
+            padding: 8px 16px;
+            background: #222;
+            border-radius: 50px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            border: 1px solid var(--border);
+        }
+
+        /* --- TERMINÁL --- */
+        .terminal {
+            background: #000;
+            border-radius: var(--radius-md);
+            padding: 15px;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            border: 1px solid #222;
+            margin-bottom: 25px;
+        }
+
+        .term-header {
+            display: flex; gap: 6px; margin-bottom: 10px; opacity: 0.4;
+        }
+        .dot { width: 8px; height: 8px; border-radius: 50%; background: #444; }
+
+        .term-body { color: var(--accent); line-height: 1.5; }
+        .blink { animation: blink 1s infinite; }
         @keyframes blink { 50% { opacity: 0; } }
 
-        #toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: var(--accent-neon); color: #000; padding: 12px 30px; border-radius: 50px; font-weight: 800; transition: 0.5s; z-index: 2000; }
-        #toast.visible { bottom: 40px; }
+        /* --- RECENZE MODAL --- */
+        .modal {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .modal.active { display: flex; }
+
+        .modal-content {
+            background: var(--surface);
+            width: 100%; max-width: 500px;
+            max-height: 90vh;
+            border-radius: var(--radius-xl);
+            padding: 35px;
+            border: 1px solid var(--border);
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .close-btn {
+            position: absolute; top: 25px; right: 25px;
+            background: none; border: none; color: #555;
+            font-size: 1.5rem; cursor: pointer;
+        }
+
+        /* Grafika hodnocení */
+        .rating-overview {
+            background: #000;
+            padding: 20px;
+            border-radius: var(--radius-lg);
+            margin-bottom: 25px;
+        }
+
+        .graph-row {
+            display: flex; align-items: center; gap: 15px; margin-bottom: 8px;
+        }
+
+        .bar-outer {
+            flex: 1; height: 6px; background: #1a1a1a; border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .bar-inner {
+            height: 100%; background: var(--accent); width: 0%;
+            transition: width 1s ease-out;
+        }
+
+        /* Seznam recenzí */
+        .review-card {
+            background: #1a1a1a;
+            padding: 15px;
+            border-radius: var(--radius-md);
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .review-top {
+            display: flex; justify-content: space-between;
+            margin-bottom: 8px; font-size: 0.85rem;
+        }
+
+        .stars { color: var(--accent); }
+
+        /* Formulář */
+        .form-box {
+            margin-top: 30px;
+            padding-top: 25px;
+            border-top: 1px solid var(--border);
+        }
+
+        .form-box input, .form-box textarea {
+            width: 100%; background: #000; border: 1px solid var(--border);
+            color: #fff; padding: 15px; border-radius: var(--radius-md);
+            margin-bottom: 15px; font-family: inherit;
+        }
+
+        .star-picker {
+            display: flex; gap: 8px; margin-bottom: 20px;
+            font-size: 1.8rem; color: #333; cursor: pointer;
+        }
+        .star-picker span.active { color: var(--accent); }
+
+        /* --- OSTATNÍ --- */
+        #toast {
+            position: fixed; bottom: -80px; left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent); color: #000;
+            padding: 15px 35px; border-radius: 50px;
+            font-weight: 800; transition: var(--transition);
+            z-index: 2000;
+        }
+        #toast.show { bottom: 40px; }
+
+        @media (max-width: 480px) {
+            .main-card { padding: 35px 20px; }
+            .info h1 { font-size: 1.8rem; }
+        }
     </style>
 </head>
 <body>
 
+    <div class="bg-glow"></div>
     <div class="grid-bg"></div>
 
-    <div class="identity-container">
-        <div class="identity-card" id="mainCard">
+    <div class="card-container">
+        <div class="main-card" id="tiltCard">
             
-            <div class="profile-section">
-                <div class="avatar-main">
-                    <svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
+            <!-- Profilovka -->
+            <div class="profile">
+                <div class="avatar-box">
+                    <div class="avatar-circle">
+                        <svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
+                    </div>
+                    <div class="status-badge"></div>
                 </div>
-                <div class="name-title">
+                <div class="info">
                     <h1>Karel Novák</h1>
-                    <p>Creative Tech Architect</p>
+                    <p>Creative Tech Director</p>
                 </div>
             </div>
 
-            <div class="links-wrapper">
-                <a href="tel:+420777123456" class="card-link">📞 Zavolat</a>
-                <a href="mailto:contact@karelnovak.tech" class="card-link">✉️ Poslat Email</a>
-                <a href="https://linkedin.com" target="_blank" class="card-link">💼 LinkedIn</a>
+            <!-- Odkazy -->
+            <div class="actions">
+                <a href="tel:+420777123456" class="btn">
+                    <svg viewBox="0 0 24 24"><path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z"/></svg>
+                    Zavolat
+                </a>
+                <a href="mailto:contact@karelnovak.tech" class="btn">
+                    <svg viewBox="0 0 24 24"><path d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4Z"/></svg>
+                    Poslat Email
+                </a>
+                <a href="https://linkedin.com" target="_blank" class="btn">
+                    <svg viewBox="0 0 24 24"><path d="M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3H19M18.5,18.5V13.2A3.26,3.26 0 0,0 15.24,9.94C13.93,9.94 13,10.63 12.46,11.47V10.11H9.09V18.5H12.46V12.93C12.46,11.97 13.05,11.27 14.18,11.27C15.31,11.27 15.13,12.23 15.13,13.29V18.5H18.5M6.88,8.56A1.68,1.68 0 0,0 8.56,6.88C8.56,5.95 7.81,5.19 6.88,5.19A1.69,1.69 0 0,0 5.19,6.88C5.19,7.81 5.95,8.56 6.88,8.56M5.19,18.5H8.56V10.11H5.19V18.5Z"/></svg>
+                    LinkedIn
+                </a>
             </div>
 
-            <div class="terminal-block">
-                <div class="terminal-body"><span id="termLog"></span><span class="cursor"></span></div>
+            <div class="section-title">Technologie</div>
+            <div class="projects-mini">
+                <div class="project-chip">React.js</div>
+                <div class="project-chip">Firebase</div>
+                <div class="project-chip">UI/UX</div>
+                <div class="project-chip">NFC Tech</div>
             </div>
 
-            <button class="review-trigger" onclick="toggleModal('reviewsModal')">Zobrazit Recenze ⭐</button>
-            <button class="review-trigger" style="border-style: dashed; margin-top: 15px;" onclick="downloadVCard()">Uložit kontakt</button>
+            <!-- Terminál -->
+            <div class="terminal">
+                <div class="term-header"><div class="dot"></div><div class="dot"></div><div class="dot"></div></div>
+                <div class="term-body" id="termOutput"></div>
+            </div>
+
+            <!-- Akce -->
+            <button class="review-trigger" onclick="openModal()">Zobrazit Recenze ⭐</button>
+            <button class="review-trigger" style="border-style: dashed; margin-top: 12px; color: #555; border-color: #333;" onclick="saveContact()">Uložit kontakt 👤</button>
 
         </div>
     </div>
 
-    <div id="reviewsModal" class="modal">
+    <!-- MODAL RECENZÍ -->
+    <div id="reviewModal" class="modal">
         <div class="modal-content">
-            <span class="close-modal" onclick="toggleModal('reviewsModal')">✕</span>
-            <h2 style="margin-bottom: 20px;">Hodnocení & Recenze</h2>
+            <button class="close-btn" onclick="closeModal()">✕</button>
+            <h2 style="margin-bottom: 25px;">Zpětná vazba</h2>
             
-            <div class="rating-stats" id="ratingStats"></div>
-
-            <div class="reviews-list" id="reviewsList">
-                <p style="color: #666; text-align: center;">Načítám recenze...</p>
+            <div class="rating-overview" id="statsCont">
+                <!-- Dynamicky plněno -->
             </div>
 
-            <div class="review-form">
-                <h3>Napsat recenzi</h3>
-                <div class="star-rating" id="formStars">
-                    <span class="star" data-val="1">★</span>
-                    <span class="star" data-val="2">★</span>
-                    <span class="star" data-val="3">★</span>
-                    <span class="star" data-val="4">★</span>
-                    <span class="star" data-val="5">★</span>
+            <div id="reviewList" style="max-height: 250px; overflow-y: auto; margin-bottom: 30px;">
+                <p style="text-align: center; color: #444;">Načítám data ze satelitu...</p>
+            </div>
+
+            <div class="form-box">
+                <h4 style="margin-bottom: 15px;">Přidat hodnocení</h4>
+                <div class="star-picker" id="starPicker">
+                    <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5" class="active">★</span>
                 </div>
-                <input type="text" id="revName" placeholder="Tvoje jméno">
-                <textarea id="revText" placeholder="Tvůj vzkaz..." rows="3"></textarea>
-                <button class="review-trigger" id="submitBtn" disabled style="opacity: 0.5;">Připojování...</button>
+                <input type="text" id="revName" placeholder="Tvoje jméno / Firma">
+                <textarea id="revText" placeholder="Jaká byla tvoje zkušenost?" rows="3"></textarea>
+                <button class="review-trigger" id="submitBtn" disabled style="opacity: 0.5;" onclick="sendReview()">Odesílání uzamčeno...</button>
             </div>
         </div>
     </div>
 
-    <div id="toast">Akce úspěšná!</div>
+    <div id="toast">Operace proběhla úspěšně!</div>
 
     <script>
-        function toggleModal(id) {
-            document.getElementById(id).classList.toggle('active');
-        }
-
-        const card = document.getElementById('mainCard');
-        document.addEventListener('mousemove', (e) => {
-            if (window.innerWidth > 800) {
-                const xAxis = (window.innerWidth / 2 - e.pageX) / 90;
-                const yAxis = (window.innerHeight / 2 - e.pageY) / 90;
-                card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
-            }
-        });
-
-        window.addEventListener('deviceorientation', (e) => {
-            if (window.innerWidth <= 800) {
-                const x = e.beta / 10;
-                const y = -e.gamma / 10;
-                card.style.transform = `rotateX(${Math.max(-15, Math.min(15, x))}deg) rotateY(${Math.max(-15, Math.min(15, y))}deg)`;
-            }
-        });
-
-        const termLog = document.getElementById('termLog');
-        const logs = ["> Systém online.", "> Gyroskop aktivní.", "> NFC ID připraveno."];
-        let currentLog = 0, charPos = 0, isDeleting = false;
-
-        window.addTerminalLog = (msg) => {
+        // --- POMOCNÉ FUNKCE ---
+        const term = document.getElementById('termOutput');
+        let logs = ["> Systém inicializován.", "> Kontrola NFC čipu...", "> Ready."];
+        
+        window.updateTermLog = (msg) => {
             logs.push(msg);
+            if (logs.length > 4) logs.shift();
+            renderTerm();
         };
 
-        function updateTerminal() {
-            const currentStr = logs[currentLog];
-            if (!isDeleting) {
-                termLog.textContent = currentStr.substring(0, charPos++);
-                if (charPos > currentStr.length) { isDeleting = true; setTimeout(updateTerminal, 2500); return; }
-            } else {
-                termLog.textContent = currentStr.substring(0, charPos--);
-                if (charPos < 2) { 
-                    isDeleting = false; 
-                    currentLog = (currentLog + 1) % logs.length; 
-                }
+        function renderTerm() {
+            term.innerHTML = logs.map(l => `<div>${l}</div>`).join('') + '<span class="cursor">_</span>';
+        }
+        renderTerm();
+
+        // --- 3D EFEKT (Optimalizovaný) ---
+        const tiltCard = document.getElementById('tiltCard');
+        document.addEventListener('mousemove', (e) => {
+            if (window.innerWidth > 800) {
+                const rect = tiltCard.getBoundingClientRect();
+                const x = (e.clientX - rect.left) / rect.width - 0.5;
+                const y = (e.clientY - rect.top) / rect.height - 0.5;
+                tiltCard.style.transform = `rotateY(${x * 12}deg) rotateX(${-y * 12}deg)`;
             }
-            setTimeout(updateTerminal, isDeleting ? 30 : 60);
-        }
-
-        let selectedRating = 5;
-        const stars = document.querySelectorAll('#formStars .star');
-        stars.forEach(s => {
-            s.addEventListener('click', () => {
-                selectedRating = parseInt(s.dataset.val);
-                stars.forEach((st, idx) => st.classList.toggle('active', idx < selectedRating));
-            });
         });
-        stars.forEach((st, idx) => st.classList.toggle('active', idx < 5));
 
-        function startReviewListener() {
-            if (!window.db || !window.appId) return;
-            const revCol = window.collection(window.db, 'artifacts', window.appId, 'public', 'data', 'reviews');
-            window.onSnapshot(revCol, (snapshot) => {
-                const reviews = [];
-                snapshot.forEach(doc => reviews.push(doc.data()));
-                renderReviews(reviews);
-                renderStats(reviews);
-            }, (err) => console.error("Firestore error:", err));
+        // Gyroskop pro mobily
+        window.addEventListener('deviceorientation', (e) => {
+            if (window.innerWidth < 800) {
+                const rotX = Math.max(-10, Math.min(10, e.beta / 4));
+                const rotY = Math.max(-10, Math.min(10, e.gamma / 4));
+                tiltCard.style.transform = `rotateX(${rotX}deg) rotateY(${rotY}deg)`;
+            }
+        });
+
+        // --- MODAL & REVIEWS ---
+        function openModal() { document.getElementById('reviewModal').classList.add('active'); }
+        function closeModal() { document.getElementById('reviewModal').classList.remove('active'); }
+
+        let currentRating = 5;
+        const pickerStars = document.querySelectorAll('#starPicker span');
+        pickerStars.forEach(s => {
+            s.onclick = () => {
+                currentRating = s.dataset.v;
+                pickerStars.forEach((st, i) => st.classList.toggle('active', i < currentRating));
+            };
+        });
+
+        function startReviewSystem() {
+            const colRef = window.collection(window.db, 'artifacts', window.appId, 'public', 'data', 'reviews');
+            window.onSnapshot(colRef, (snap) => {
+                const data = [];
+                snap.forEach(d => data.push(docToReview(d)));
+                renderReviews(data);
+                renderStats(data);
+            });
         }
+
+        const docToReview = (d) => ({ id: d.id, ...d.data() });
 
         function renderReviews(reviews) {
-            const list = document.getElementById('reviewsList');
+            const cont = document.getElementById('reviewList');
             if (reviews.length === 0) {
-                list.innerHTML = '<p style="text-align:center; color:#555;">Zatím žádné recenze. Buď první!</p>';
+                cont.innerHTML = '<p style="text-align:center; color:#444;">Zatím prázdno. Buď první!</p>';
                 return;
             }
-            reviews.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-            list.innerHTML = reviews.map(r => `
-                <div class="review-item">
-                    <div class="review-item-header">
+            reviews.sort((a,b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+            cont.innerHTML = reviews.map(r => `
+                <div class="review-card">
+                    <div class="review-top">
                         <strong>${r.name || 'Anonym'}</strong>
-                        <span class="review-stars">${'★'.repeat(r.rating || 0)}</span>
+                        <span class="stars">${'★'.repeat(r.rating)}</span>
                     </div>
-                    <p style="font-size:0.85rem; color:#bbb;">${r.text || ''}</p>
+                    <p style="font-size:0.85rem; color:#888;">${r.text}</p>
                 </div>
             `).join('');
         }
 
         function renderStats(reviews) {
-            const statsCont = document.getElementById('ratingStats');
-            const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-            reviews.forEach(r => { if (r.rating) counts[r.rating]++; });
+            const cont = document.getElementById('statsCont');
+            const counts = {5:0, 4:0, 3:0, 2:0, 1:0};
+            reviews.forEach(r => counts[r.rating]++);
             const total = reviews.length || 1;
-            let html = '';
-            for (let i = 5; i >= 1; i--) {
+            
+            let html = '<div style="margin-bottom:15px; font-weight:bold;">Celkové hodnocení</div>';
+            for(let i=5; i>=1; i--) {
                 const pct = (counts[i] / total) * 100;
                 html += `
-                    <div class="stat-row">
-                        <span class="stat-label">${i} hvězd</span>
-                        <div class="bar-bg"><div class="bar-fill" style="width: ${pct}%"></div></div>
-                        <span style="font-size:0.7rem; color:#666; min-width:30px;">${Math.round(pct)}%</span>
+                    <div class="graph-row">
+                        <span style="font-size:0.7rem; width:15px;">${i}</span>
+                        <div class="bar-outer"><div class="bar-inner" style="width:${pct}%"></div></div>
                     </div>
                 `;
             }
-            statsCont.innerHTML = html;
+            cont.innerHTML = html;
         }
 
-        async function submitReview() {
-            if (!window.currentUser) return;
-            const nameInput = document.getElementById('revName');
-            const textInput = document.getElementById('revText');
-            const name = nameInput.value;
-            const text = textInput.value;
-            if (!text) return showToast("Napiš aspoň krátký vzkaz!");
+        async function sendReview() {
+            const name = document.getElementById('revName').value;
+            const text = document.getElementById('revText').value;
+            if (!text) return toast("Napiš prosím vzkaz!");
 
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
-            btn.innerText = "Odesílám...";
 
             try {
-                const revCol = window.collection(window.db, 'artifacts', window.appId, 'public', 'data', 'reviews');
-                await window.addDoc(revCol, {
+                const colRef = window.collection(window.db, 'artifacts', window.appId, 'public', 'data', 'reviews');
+                await window.addDoc(colRef, {
                     name: name || 'Anonym',
                     text: text,
-                    rating: selectedRating,
+                    rating: parseInt(currentRating),
                     createdAt: window.serverTimestamp()
                 });
-                nameInput.value = '';
-                textInput.value = '';
-                showToast("Díky za recenzi! ❤️");
-            } catch (e) {
-                showToast("Chyba při odesílání.");
-            } finally {
-                btn.disabled = false;
-                btn.innerText = "Odeslat recenzi";
-            }
+                document.getElementById('revText').value = "";
+                toast("Recenze odeslána! ❤️");
+            } catch(e) { toast("Chyba při zápisu."); }
+            finally { btn.disabled = false; }
         }
 
-        function showToast(msg) {
+        function toast(msg) {
             const t = document.getElementById('toast');
-            t.textContent = msg;
-            t.classList.add('visible');
-            setTimeout(() => t.classList.remove('visible'), 3000);
+            t.innerText = msg;
+            t.classList.add('show');
+            setTimeout(() => t.classList.remove('show'), 3000);
         }
 
-        function downloadVCard() {
-            const vCard = "BEGIN:VCARD\nVERSION:3.0\nFN:Karel Novák\nTEL:+420777123456\nEMAIL:contact@karelnovak.tech\nEND:VCARD";
-            const blob = new Blob([vCard], { type: "text/vcard" });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
+        function saveContact() {
+            const vcf = "BEGIN:VCARD\nVERSION:3.0\nFN:Karel Novák\nTEL:+420777123456\nEMAIL:contact@karelnovak.tech\nEND:VCARD";
+            const blob = new Blob([vcf], { type: "text/vcard" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
             a.href = url; a.download = "karel_novak.vcf"; a.click();
-            showToast("Vizitka stažena! 👤");
+            toast("Vizitka připravena!");
         }
-
-        window.onload = () => {
-            updateTerminal();
-        };
     </script>
 </body>
 </html>
