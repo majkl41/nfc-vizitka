@@ -3,32 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Karel Novák // Precision Identity</title>
+    <title>Karel Novák // Max Bento Identity</title>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@500;800&display=swap');
 
         :root {
             --bg: #ffffff;
             --card-bg: #ffffff;
-            --card-hover: #fbfbfb;
-            --tag-bg: #f2f2f7; /* Apple Grey pro vnitřní bloky */
-            --border: rgba(0, 0, 0, 0.12); /* Zvýrazněný border */
+            --platform-bg: #f5f5f7; /* Apple Grey pro podkladové obdélníky */
+            --border: rgba(0, 0, 0, 0.05);
             --text-main: #1d1d1f;
             --text-dim: #86868b;
             
-            /* Brand Colors */
+            /* Brand Palette */
             --clr-ig: #E1306C;
             --clr-fb: #1877F2;
             --clr-li: #0077B5;
             --clr-web: #00d4aa;
             --clr-apple-blue: #0071e3;
             
-            --radius-lg: 32px;
-            --radius-md: 20px;
-            --radius-sm: 14px;
+            --radius-lg: 38px;
+            --radius-md: 26px;
+            --radius-sm: 18px;
             --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
+        /* --- Reset & Base --- */
         * {
             margin: 0; padding: 0; box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
@@ -46,7 +46,6 @@
             overflow-x: hidden;
         }
 
-        /* --- BACKGROUND --- */
         .noise {
             position: fixed; inset: 0; z-index: -1;
             background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
@@ -54,157 +53,161 @@
             pointer-events: none;
         }
 
-        /* --- CONTAINER --- */
+        /* --- APP CONTAINER --- */
         .container {
             width: 100%;
-            max-width: 380px;
+            max-width: 400px;
             display: flex;
             flex-direction: column;
             gap: 16px;
         }
 
-        .card {
+        .main-card {
             background: var(--card-bg);
             border: 1px solid var(--border);
             border-radius: var(--radius-lg);
-            padding: 32px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.05);
-            transition: var(--ease);
+            padding: 24px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
-        /* Profile Section */
-        .profile {
+        /* --- PLATFORM --- */
+        .platform {
+            background: var(--platform-bg);
+            border-radius: var(--radius-md);
+            padding: 36px 20px;
+            border: 1px solid rgba(0,0,0,0.02);
+            box-shadow: inset 0 1px 2px rgba(255,255,255,1);
             text-align: center;
-            margin-bottom: 24px;
+        }
+
+        /* --- HEADER SECTION --- */
+        .profile {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
         }
 
         .avatar-wrap {
             width: 90px; height: 90px;
-            margin: 0 auto 24px;
+            margin-bottom: 24px;
             position: relative;
         }
 
         .avatar-inner {
             width: 100%; height: 100%;
-            background: #111111;
+            background: #111;
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
             border: 2px solid #000;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.18);
         }
 
-        .avatar-inner svg { width: 45%; fill: #ffffff; }
+        .avatar-inner svg { width: 42%; fill: #fff; }
 
         .status-badge {
-            position: absolute;
-            bottom: 4px; right: 4px;
-            width: 18px; height: 18px;
-            background: #34c759;
-            border: 3px solid #fff;
+            position: absolute; bottom: 4px; right: 4px;
+            width: 20px; height: 20px;
+            background: #34c759; border: 3px solid var(--platform-bg);
             border-radius: 50%;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
 
-        .info-tag {
-            display: inline-block;
-            background: var(--tag-bg);
-            padding: 12px 24px;
-            border-radius: var(--radius-sm);
-            border: 1px solid rgba(0,0,0,0.06);
-            margin: 0 auto;
-        }
-
-        .info-tag h1 {
-            font-size: 1.6rem;
+        .header-text h1 {
+            font-size: 1.7rem;
             font-weight: 800;
             letter-spacing: -0.8px;
             margin-bottom: 2px;
             color: #000;
         }
 
-        .info-tag p {
-            color: var(--text-dim);
-            font-size: 0.7rem;
+        .header-text p {
+            color: var(--clr-apple-blue);
+            font-size: 0.75rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 2.5px;
         }
 
-        /* --- SOCIAL GRID 2x2 --- */
+        /* --- SOCIAL GRID (2x2 ZVĚTŠENÁ) --- */
         .social-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
-            margin-top: 12px;
+            margin: 32px auto 0;
+            max-width: 260px; /* Zvětšena šířka mřížky */
         }
 
         .social-box {
             aspect-ratio: 1/1;
-            background: #f2f2f7; /* Mírně tmavší pozadí pro viditelnost */
-            border: 1.5px solid rgba(0,0,0,0.1); /* Silnější ohraničení */
-            border-radius: var(--radius-md);
+            background: #ffffff;
+            border: 1.5px solid rgba(0,0,0,0.08);
+            border-radius: 24px; /* Větší rádius pro větší ikony */
             display: flex; align-items: center; justify-content: center;
             text-decoration: none;
             transition: var(--ease);
-            position: relative;
-            overflow: hidden;
-            box-shadow: inset 0 1px 2px rgba(255,255,255,0.8), 0 2px 4px rgba(0,0,0,0.02);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.02);
         }
 
-        .social-box svg { width: 34px; height: 34px; transition: 0.4s; }
+        .social-box svg { width: 42px; height: 42px; transition: 0.4s; } /* Výrazně větší ikony */
 
-        /* Brand Colors v základu - s vyšším kontrastem */
         .social-box.ig svg { fill: var(--clr-ig); }
         .social-box.fb svg { fill: var(--clr-fb); }
         .social-box.li svg { fill: var(--clr-li); }
         .social-box.web svg { fill: var(--clr-web); }
 
-        /* Hover efekty - výrazné přebití barvou */
         .social-box:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 15px 30px rgba(0,0,0,0.12);
-            border-color: rgba(0,0,0,0.2);
+            transform: translateY(-6px) scale(1.05);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.1);
+            border-color: #000;
         }
 
-        .social-box.ig:hover { background: var(--clr-ig); border-color: var(--clr-ig); }
-        .social-box.fb:hover { background: var(--clr-fb); border-color: var(--clr-fb); }
-        .social-box.li:hover { background: var(--clr-li); border-color: var(--clr-li); }
-        .social-box.web:hover { background: var(--clr-web); border-color: var(--clr-web); }
+        .social-box:hover svg { fill: #fff !important; }
+        .social-box.ig:hover { background: var(--clr-ig); }
+        .social-box.fb:hover { background: var(--clr-fb); }
+        .social-box.li:hover { background: var(--clr-li); }
+        .social-box.web:hover { background: var(--clr-web); }
 
-        .social-box:hover svg { fill: #fff !important; transform: scale(1.1); }
-
-        /* --- AKCE --- */
+        /* --- ACTION BUTTONS --- */
         .btn-call {
             width: 100%;
             background: #000;
             color: #fff;
-            padding: 20px;
+            padding: 22px;
             border-radius: var(--radius-md);
             text-decoration: none;
             font-weight: 700;
             text-align: center;
-            margin-bottom: 20px;
             display: block;
             transition: var(--ease);
             border: none;
             cursor: pointer;
+            font-size: 1.05rem;
         }
 
         .btn-call:hover {
             background: var(--clr-apple-blue);
-            transform: translateY(-2px);
-            box-shadow: 0 15px 30px rgba(0, 113, 227, 0.2);
+            transform: scale(1.01);
+            box-shadow: 0 10px 30px rgba(0, 113, 227, 0.25);
+        }
+
+        /* --- UTILITY SECTION --- */
+        .utility-platform {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
         .sys-info {
-            background: #f5f5f7;
-            border-radius: 18px;
-            padding: 14px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.6rem;
-            color: #888;
+            font-size: 0.65rem;
+            color: #aeaeb2;
             text-align: left;
-            border: 1px solid var(--border);
+            padding: 0 8px;
+            line-height: 1.6;
+            border-left: 2px solid #e5e5ea;
         }
 
         .util-row {
@@ -215,11 +218,11 @@
 
         .btn-util {
             background: #fff;
-            border: 1px solid var(--border);
+            border: 1px solid rgba(0,0,0,0.06);
             color: #000;
-            padding: 14px;
-            border-radius: 14px;
-            font-size: 0.72rem;
+            padding: 16px;
+            border-radius: 18px;
+            font-size: 0.78rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 1.5px;
@@ -227,7 +230,11 @@
             transition: 0.3s;
         }
 
-        .btn-util:hover { background: #000; color: #fff; border-color: #000; }
+        .btn-util:hover {
+            background: #000;
+            color: #fff;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
 
         /* --- MODAL --- */
         .modal {
@@ -237,41 +244,33 @@
             z-index: 1000;
             display: none;
             align-items: center; justify-content: center;
-            padding: 20px;
+            padding: 24px;
         }
 
         .modal-body {
             background: #fff;
             border: 1px solid var(--border);
-            width: 100%; max-width: 400px;
-            border-radius: 32px;
-            padding: 32px;
+            width: 100%; max-width: 420px;
+            border-radius: 36px;
+            padding: 40px;
             max-height: 85vh;
             overflow-y: auto;
             box-shadow: 0 40px 100px rgba(0,0,0,0.1);
         }
 
         .rev-item {
-            background: #f9f9fb;
-            padding: 16px;
-            border-radius: 16px;
+            background: var(--platform-bg);
+            padding: 20px;
+            border-radius: 20px;
             margin-bottom: 12px;
-            border: 1px solid var(--border);
-        }
-
-        .rev-text { font-size: 0.9rem; color: #444; }
-
-        input {
-            width: 100%; background: #f5f5f7; border: 1px solid var(--border);
-            color: #000; padding: 16px; border-radius: 14px; margin-bottom: 16px;
-            outline: none; font-family: inherit;
+            border: 1px solid rgba(0,0,0,0.02);
         }
 
         #toast {
-            position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%);
+            position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%);
             background: #000; color: #fff;
-            padding: 12px 32px; border-radius: 50px;
-            font-weight: 700; font-size: 0.85rem; transition: 0.4s var(--ease); z-index: 2000;
+            padding: 16px 36px; border-radius: 100px;
+            font-weight: 700; font-size: 0.9rem; transition: 0.4s var(--ease); z-index: 2000;
         }
         #toast.active { bottom: 40px; }
     </style>
@@ -282,70 +281,77 @@
 
     <div class="container">
         
-        <!-- Profile Section -->
-        <header class="card profile">
-            <div class="avatar-wrap">
-                <div class="avatar-inner">
-                    <svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
-                </div>
-                <div class="status-badge"></div>
-            </div>
+        <div class="main-card">
             
-            <div class="info-tag">
-                <h1>Karel Novák</h1>
-                <p>Creative Tech Director</p>
+            <!-- HORNÍ OSTRŮVEK (Profil + Text + Ikony 2x2 ZVĚTŠENÉ) -->
+            <div class="platform">
+                <header class="profile">
+                    <div class="avatar-wrap">
+                        <div class="avatar-inner">
+                            <svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
+                        </div>
+                        <div class="status-badge"></div>
+                    </div>
+                    
+                    <div class="header-text">
+                        <h1>Karel Novák</h1>
+                        <p>Creative Tech Director</p>
+                    </div>
+                </header>
+
+                <div class="social-grid">
+                    <a href="https://instagram.com" class="social-box ig" title="Instagram">
+                        <svg viewBox="0 0 24 24"><path d="M7.8,2H16.2C19.4,2 22,4.6 22,7.8V16.2A5.8,5.8 0 0,1 16.2,22H7.8C4.6,22 2,19.4 2,16.2V7.8A5.8,5.8 0 0,1 7.8,2M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9M18,5.75A1.25,1.25 0 0,0 16.75,7A1.25,1.25 0 0,0 18,8.25A1.25,1.25 0 0,0 19.25,7A1.25,1.25 0 0,0 18,5.75Z"/></svg>
+                    </a>
+                    <a href="https://facebook.com" class="social-box fb" title="Facebook">
+                        <svg viewBox="0 0 24 24"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96A10 10 0 0 0 22 12.06C22 6.53 17.5 2.04 12 2.04Z"/></svg>
+                    </a>
+                    <a href="https://linkedin.com" class="social-box li" title="LinkedIn">
+                        <svg viewBox="0 0 24 24"><path d="M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3H19M18.5,18.5V13.2A3.26,3.26 0 0,0 15.24,9.94C13.93,9.94 13,10.63 12.46,11.47V10.11H9.09V18.5H12.46V12.93C12.46,11.97 13.05,11.27 14.18,11.27C15.31,11.27 15.13,12.23 15.13,13.29V18.5H18.5M6.88,8.56A1.68,1.68 0 0,0 8.56,6.88C8.56,5.95 7.81,5.19 6.88,5.19A1.69,1.69 0 0,0 5.19,6.88C5.19,7.81 5.95,8.56 6.88,8.56M5.19,18.5H8.56V10.11H5.19V18.5Z"/></svg>
+                    </a>
+                    <a href="#" class="social-box web" title="Website">
+                        <svg viewBox="0 0 24 24"><path d="M16.36,14C16.44,13.34 16.5,12.68 16.5,12C16.5,11.32 16.44,10.66 16.36,10H19.74C19.9,10.64 20,11.31 20,12C20,12.69 19.9,13.36 19.74,14M14.59,19.56C15.19,18.45 15.65,17.25 15.97,16H18.92C17.96,17.65 16.43,18.93 14.59,19.56M14.34,14H9.66C9.57,13.34 9.5,12.68 9.5,12C9.5,11.32 9.57,10.66 9.66,10H14.34C14.43,10.66 14.5,11.32 14.5,12C14.5,12.68 14.43,13.34 14.34,14M12,19.96C11.17,18.76 10.5,17.43 10.09,16H13.91C13.5,17.43 12.83,18.76 12,19.96M8,14H4.26C4.1,13.36 4,12.69 4,12C4,11.31 4.1,10.64 4.26,10H8C7.91,10.66 7.85,11.32 7.85,12C7.85,12.68 7.91,13.34 8,14M14.59,4.44C16.43,5.07 17.96,6.35 18.92,8H15.97C15.65,6.75 15.19,5.55 14.59,4.44M13.91,8H10.09C10.5,6.57 11.17,5.24 12,4.04C12.83,5.24 13.5,6.57 13.91,8M9.41,4.44C8.81,5.55 8.35,6.75 8.03,8H5.08C6.04,6.35 7.57,5.07 9.41,4.44M4.26,8H8C8.09,8.66 8.15,9.32 8.15,10H4.26C4.1,9.36 4,8.69 4,8M5.08,16H8.03C8.35,17.25 8.81,18.45 9.41,19.56C7.57,18.93 6.04,17.65 5.08,16Z"/></svg>
+                    </a>
+                </div>
             </div>
-        </header>
 
-        <!-- Social Grid 2x2 - ZVÝRAZNĚNÉ ČTVERCE -->
-        <div class="social-grid">
-            <a href="https://instagram.com" class="social-box ig" title="Instagram">
-                <svg viewBox="0 0 24 24"><path d="M7.8,2H16.2C19.4,2 22,4.6 22,7.8V16.2A5.8,5.8 0 0,1 16.2,22H7.8C4.6,22 2,19.4 2,16.2V7.8A5.8,5.8 0 0,1 7.8,2M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9M18,5.75A1.25,1.25 0 0,0 16.75,7A1.25,1.25 0 0,0 18,8.25A1.25,1.25 0 0,0 19.25,7A1.25,1.25 0 0,0 18,5.75Z"/></svg>
-            </a>
-            <a href="https://facebook.com" class="social-box fb" title="Facebook">
-                <svg viewBox="0 0 24 24"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96A10 10 0 0 0 22 12.06C22 6.53 17.5 2.04 12 2.04Z"/></svg>
-            </a>
-            <a href="https://linkedin.com" class="social-box li" title="LinkedIn">
-                <svg viewBox="0 0 24 24"><path d="M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3H19M18.5,18.5V13.2A3.26,3.26 0 0,0 15.24,9.94C13.93,9.94 13,10.63 12.46,11.47V10.11H9.09V18.5H12.46V12.93C12.46,11.97 13.05,11.27 14.18,11.27C15.31,11.27 15.13,12.23 15.13,13.29V18.5H18.5M6.88,8.56A1.68,1.68 0 0,0 8.56,6.88C8.56,5.95 7.81,5.19 6.88,5.19A1.69,1.69 0 0,0 5.19,6.88C5.19,7.81 5.95,8.56 6.88,8.56M5.19,18.5H8.56V10.11H5.19V18.5Z"/></svg>
-            </a>
-            <a href="#" class="social-box web" title="Website">
-                <svg viewBox="0 0 24 24"><path d="M16.36,14C16.44,13.34 16.5,12.68 16.5,12C16.5,11.32 16.44,10.66 16.36,10H19.74C19.9,10.64 20,11.31 20,12C20,12.69 19.9,13.36 19.74,14M14.59,19.56C15.19,18.45 15.65,17.25 15.97,16H18.92C17.96,17.65 16.43,18.93 14.59,19.56M14.34,14H9.66C9.57,13.34 9.5,12.68 9.5,12C9.5,11.32 9.57,10.66 9.66,10H14.34C14.43,10.66 14.5,11.32 14.5,12C14.5,12.68 14.43,13.34 14.34,14M12,19.96C11.17,18.76 10.5,17.43 10.09,16H13.91C13.5,17.43 12.83,18.76 12,19.96M8,14H4.26C4.1,13.36 4,12.69 4,12C4,11.31 4.1,10.64 4.26,10H8C7.91,10.66 7.85,11.32 7.85,12C7.85,12.68 7.91,13.34 8,14M14.59,4.44C16.43,5.07 17.96,6.35 18.92,8H15.97C15.65,6.75 15.19,5.55 14.59,4.44M13.91,8H10.09C10.5,6.57 11.17,5.24 12,4.04C12.83,5.24 13.5,6.57 13.91,8M9.41,4.44C8.81,5.55 8.35,6.75 8.03,8H5.08C6.04,6.35 7.57,5.07 9.41,4.44M4.26,8H8C8.09,8.66 8.15,9.32 8.15,10H4.26C4.1,9.36 4,8.69 4,8M5.08,16H8.03C8.35,17.25 8.81,18.45 9.41,19.56C7.57,18.93 6.04,17.65 5.08,16Z"/></svg>
-            </a>
+            <button class="btn-call" onclick="window.location.href='tel:+420777123456'">Zavolat Karlovi</button>
+
+            <!-- SPODNÍ OSTRŮVEK -->
+            <div class="platform utility-platform">
+                <div class="sys-info">
+                    <div>&bull; BENTO_MAX v9.7.0 ONLINE</div>
+                    <div>&bull; ASSETS SCALED FOR ACCESSIBILITY</div>
+                </div>
+
+                <div class="util-row">
+                    <button class="btn-util" onclick="App.ui.modal(true)">Recenze ⭐</button>
+                    <button class="btn-util" onclick="App.utils.save()">Uložit 👤</button>
+                </div>
+            </div>
+
         </div>
-
-        <button class="btn-call" onclick="window.location.href='tel:+420777123456'">Zavolat partnerovi</button>
-
-        <div class="sys-info">
-            <div>&bull; LIGHT_OS v9.3.0 ACTIVE</div>
-            <div>&bull; CORE IDENTITY FRAMED</div>
-        </div>
-
-        <div class="util-row">
-            <button class="btn-util" onclick="App.ui.modal(true)">Recenze ⭐</button>
-            <button class="btn-util" onclick="App.utils.save()">Uložit 👤</button>
-        </div>
-
     </div>
 
     <!-- Modal -->
     <div class="modal" id="modal" onclick="App.ui.modal(false)">
         <div class="modal-body" onclick="event.stopPropagation()">
-            <h2 style="margin-bottom: 24px; color: #000;">Zpětná vazba</h2>
+            <h2 style="margin-bottom: 24px; color: #000; font-weight: 800;">Zpětná vazba</h2>
             <div id="revList"></div>
             
-            <div style="margin-top: 32px; border-top: 1px solid var(--border); padding-top: 24px;">
+            <div style="margin-top: 32px; border-top: 1px solid #e5e5ea; padding-top: 24px;">
                 <input type="text" id="revIn" placeholder="Napište vzkaz...">
-                <button class="btn-call" style="width:100%;" onclick="App.logic.add()">Odeslat hodnocení</button>
+                <button class="btn-call" style="width:100%; margin: 0;" onclick="App.logic.add()">Odeslat hodnocení</button>
             </div>
-            <button onclick="App.ui.modal(false)" style="background: none; border: none; width: 100%; margin-top: 20px; color: #aaa; cursor: pointer; text-transform: uppercase; font-size: 0.7rem; font-weight: 800;">Zavřít</button>
+            <button onclick="App.ui.modal(false)" style="background: none; border: none; width: 100%; margin-top: 20px; color: #8e8e93; cursor: pointer; text-transform: uppercase; font-size: 0.75rem; font-weight: 800;">Zavřít</button>
         </div>
     </div>
 
-    <div id="toast">Provedeno</div>
+    <div id="toast">Operace úspěšná</div>
 
     <script>
         const App = {
-            state: { key: 'elite_v9_precision' },
+            state: { key: 'elite_v9_max' },
             ui: {
                 modal(show) {
                     const el = document.getElementById('modal');
@@ -381,8 +387,8 @@
                     list.innerHTML = store.reverse().map(r => `
                         <div class="rev-item">
                             <div style="color:#ffcc00; font-size:0.7rem; margin-bottom: 4px;">★★★★★</div>
-                            <div class="rev-text">${r.text}</div>
-                            <div style="font-size:0.6rem; color:#bbb; margin-top:8px;">${r.date}</div>
+                            <div style="font-size:0.9rem; color:#1d1d1f;">${r.text}</div>
+                            <div style="font-size:0.6rem; color:#8e8e93; margin-top:8px;">${r.date}</div>
                         </div>
                     `).join('');
                 }
@@ -393,8 +399,8 @@
                     const blob = new Blob([vCard], { type: "text/vcard" });
                     const url = URL.createObjectURL(blob);
                     const a = document.createElement('a');
-                    a.href = url; a.download = "karel_novak_contact.vcf"; a.click();
-                    App.ui.toast("Exportováno.");
+                    a.href = url; a.download = "karel_novak.vcf"; a.click();
+                    App.ui.toast("Kontakt uložen.");
                 }
             }
         };
