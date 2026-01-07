@@ -3,38 +3,32 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Jan Novák | Vizitka</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>Digitální NFC vizitka</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    * { box-sizing: border-box; }
     body {
       margin: 0;
       min-height: 100vh;
-      font-family: 'Inter', sans-serif;
+      font-family: Inter, sans-serif;
       background: radial-gradient(circle at top, #1b3b73, #08162f 70%);
       display: flex;
-      align-items: center;
       justify-content: center;
+      align-items: center;
     }
-
     .card {
       width: 360px;
       background: #f7f9fc;
       border-radius: 22px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+      box-shadow: 0 20px 40px rgba(0,0,0,.35);
       overflow: hidden;
     }
-
-    .card-header {
+    .header {
       height: 120px;
       background: #4f8df7;
       display: flex;
-      align-items: flex-end;
       justify-content: center;
+      align-items: flex-end;
     }
-
     .avatar {
       width: 96px;
       height: 96px;
@@ -43,125 +37,48 @@
       padding: 6px;
       transform: translateY(48px);
     }
-
-    .avatar img {
-      width: 100%;
-      height: 100%;
-      border-radius: 50%;
-    }
-
-    .card-body {
+    .avatar img { width:100%; height:100%; border-radius:50%; }
+    .body {
       padding: 64px 22px 26px;
       text-align: center;
     }
-
-    .name {
-      font-size: 22px;
-      font-weight: 700;
-      color: #1f2a44;
-      margin-bottom: 6px;
-    }
-
-    .subtitle {
-      font-size: 14px;
-      color: #6b7a90;
-      margin-bottom: 22px;
-    }
-
-    a.btn-primary, a.btn {
-      text-decoration: none;
+    h1 { font-size: 22px; margin: 0; color:#1f2a44; }
+    p { font-size: 14px; color:#6b7a90; margin:6px 0 22px; }
+    a {
       display: flex;
-      cursor: pointer;
-      pointer-events: auto;
-    }
-
-    .btn-primary {
-      width: 100%;
-      background: #4f8df7;
-      color: #fff;
-      border-radius: 14px;
+      justify-content: center;
+      align-items: center;
       padding: 14px;
-      font-size: 15px;
-      font-weight: 600;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      margin-bottom: 14px;
-    }
-
-    .btn {
-      width: 100%;
-      background: #ffffff;
-      border: 1px solid #e4e9f2;
-      border-radius: 14px;
-      padding: 13px;
-      font-size: 14px;
-      font-weight: 500;
-      color: #1f2a44;
-      align-items: center;
-      justify-content: center;
-      gap: 10px;
       margin-bottom: 12px;
+      border-radius: 14px;
+      text-decoration: none;
+      font-weight: 600;
     }
-
-    .btn:last-child { margin-bottom: 0; }
-
-    .btn-primary:hover { background: #3c7ae6; }
-    .btn:hover { background: #f1f4fa; }
+    .primary { background:#4f8df7; color:#fff; }
+    .secondary { background:#fff; color:#1f2a44; border:1px solid #e4e9f2; }
   </style>
 </head>
 <body>
 
-<script>
-  // ====== JEDINÉ MÍSTO, KDE UPRAVUJEŠ DATA ======
-  const PROFILE = {
-    name: "Tvoje jméno",
-    subtitle: "Tvoje role / firma / cokoliv",
-    phone: "+420600000000",
-    email: "email@domena.cz",
-    instagram: "https://www.instagram.com",
-    website: "https://tvoje-stranka.cz",
-    avatar: "https://i.imgur.com/8Km9tLL.png",
-    vcard: "moje-vizitka.vcf"
-  };
-</script>
-
-  <div class="card">
-    <div class="card-header">
-      <div class="avatar">
-        <img id="avatar" alt="Avatar">
-      </div>
-    </div>
-
-    <div class="card-body">
-      <div class="name" id="name"></div>
-      <div class="subtitle" id="subtitle"></div>
-
-      <a class="btn-primary" id="vcardBtn" download>
-        ⬇️ Uložit do kontaktů
-      </a>
-
-      <a class="btn" id="callBtn">📞 Zavolat</a>
-      <a class="btn" id="emailBtn">✉️ Poslat Email</a>
-      <a class="btn" id="igBtn" target="_blank">📸 Instagram</a>
-      <a class="btn" id="webBtn" target="_blank">🌐 Web</a>
+<div class="card">
+  <div class="header">
+    <div class="avatar">
+      <img src="https://i.imgur.com/8Km9tLL.png" alt="Avatar">
     </div>
   </div>
 
-<script>
-  // ====== AUTOMATICKÉ NAPLNĚNÍ ======
-  document.getElementById('name').textContent = PROFILE.name;
-  document.getElementById('subtitle').textContent = PROFILE.subtitle;
-  document.getElementById('avatar').src = PROFILE.avatar;
+  <div class="body">
+    <!-- 🔧 UPRAVUJ JEN TYHLE ŘÁDKY -->
+    <h1>Brasko</h1>
+    <p>NFC vizitky & digitální projekty</p>
 
-  document.getElementById('callBtn').href = `tel:${PROFILE.phone}`;
-  document.getElementById('callBtn').textContent = `📞 Zavolat (${PROFILE.phone})`;
-
-  document.getElementById('emailBtn').href = `mailto:${PROFILE.email}`;
-  document.getElementById('igBtn').href = PROFILE.instagram;
-  document.getElementById('webBtn').href = PROFILE.website;
-  document.getElementById('vcardBtn').href = PROFILE.vcard;
-</script>
+    <a class="primary" href="brasko.vcf">⬇️ Uložit do kontaktů</a>
+    <a class="secondary" href="tel:+420777123456">📞 Zavolat</a>
+    <a class="secondary" href="mailto:brasko@email.cz">✉️ Email</a>
+    <a class="secondary" href="https://www.instagram.com">📸 Instagram</a>
+    <a class="secondary" href="https://tvoje-stranka.cz">🌐 Web</a>
+  </div>
+</div>
 
 </body>
 </html>
