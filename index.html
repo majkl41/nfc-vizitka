@@ -112,43 +112,56 @@
 </head>
 <body>
 
+<script>
+  // ====== JEDINÉ MÍSTO, KDE UPRAVUJEŠ DATA ======
+  const PROFILE = {
+    name: "Tvoje jméno",
+    subtitle: "Tvoje role / firma / cokoliv",
+    phone: "+420600000000",
+    email: "email@domena.cz",
+    instagram: "https://www.instagram.com",
+    website: "https://tvoje-stranka.cz",
+    avatar: "https://i.imgur.com/8Km9tLL.png",
+    vcard: "moje-vizitka.vcf"
+  };
+</script>
+
   <div class="card">
     <div class="card-header">
       <div class="avatar">
-        <img src="https://i.imgur.com/8Km9tLL.png" alt="Avatar">
+        <img id="avatar" alt="Avatar">
       </div>
     </div>
 
     <div class="card-body">
-      <div class="name">Jan Novák</div>
-      <div class="subtitle">Student VUT | Elektronika & Vývoj</div>
+      <div class="name" id="name"></div>
+      <div class="subtitle" id="subtitle"></div>
 
-      <!-- vCard download -->
-      <a class="btn-primary" href="jan-novak.vcf" download>
+      <a class="btn-primary" id="vcardBtn" download>
         ⬇️ Uložit do kontaktů
       </a>
 
-      <!-- Call -->
-      <a class="btn" href="tel:+420603180196">
-        📞 Zavolat (+420 603 180 196)
-      </a>
-
-      <!-- Email -->
-      <a class="btn" href="mailto:jan.novak@email.cz">
-        ✉️ Poslat Email
-      </a>
-
-      <!-- Instagram -->
-      <a class="btn" href="https://www.instagram.com" target="_blank">
-        📸 Instagram
-      </a>
-
-      <!-- Website -->
-      <a class="btn" href="https://tvoje-portfolio.cz" target="_blank">
-        🌐 Moje webové portfolio
-      </a>
+      <a class="btn" id="callBtn">📞 Zavolat</a>
+      <a class="btn" id="emailBtn">✉️ Poslat Email</a>
+      <a class="btn" id="igBtn" target="_blank">📸 Instagram</a>
+      <a class="btn" id="webBtn" target="_blank">🌐 Web</a>
     </div>
   </div>
+
+<script>
+  // ====== AUTOMATICKÉ NAPLNĚNÍ ======
+  document.getElementById('name').textContent = PROFILE.name;
+  document.getElementById('subtitle').textContent = PROFILE.subtitle;
+  document.getElementById('avatar').src = PROFILE.avatar;
+
+  document.getElementById('callBtn').href = `tel:${PROFILE.phone}`;
+  document.getElementById('callBtn').textContent = `📞 Zavolat (${PROFILE.phone})`;
+
+  document.getElementById('emailBtn').href = `mailto:${PROFILE.email}`;
+  document.getElementById('igBtn').href = PROFILE.instagram;
+  document.getElementById('webBtn').href = PROFILE.website;
+  document.getElementById('vcardBtn').href = PROFILE.vcard;
+</script>
 
 </body>
 </html>
