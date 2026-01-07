@@ -1,84 +1,90 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Digitální NFC vizitka</title>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-  <style>
-    body {
-      margin: 0;
-      min-height: 100vh;
-      font-family: Inter, sans-serif;
-      background: radial-gradient(circle at top, #1b3b73, #08162f 70%);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .card {
-      width: 360px;
-      background: #f7f9fc;
-      border-radius: 22px;
-      box-shadow: 0 20px 40px rgba(0,0,0,.35);
-      overflow: hidden;
-    }
-    .header {
-      height: 120px;
-      background: #4f8df7;
-      display: flex;
-      justify-content: center;
-      align-items: flex-end;
-    }
-    .avatar {
-      width: 96px;
-      height: 96px;
-      border-radius: 50%;
-      background: #fff;
-      padding: 6px;
-      transform: translateY(48px);
-    }
-    .avatar img { width:100%; height:100%; border-radius:50%; }
-    .body {
-      padding: 64px 22px 26px;
-      text-align: center;
-    }
-    h1 { font-size: 22px; margin: 0; color:#1f2a44; }
-    p { font-size: 14px; color:#6b7a90; margin:6px 0 22px; }
-    a {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 14px;
-      margin-bottom: 12px;
-      border-radius: 14px;
-      text-decoration: none;
-      font-weight: 600;
-    }
-    .primary { background:#4f8df7; color:#fff; }
-    .secondary { background:#fff; color:#1f2a44; border:1px solid #e4e9f2; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NFC Digital Card | Profi Design</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #050505; color: white; font-family: 'Inter', sans-serif; }
+        .glass {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+        }
+        .btn-primary {
+            background: linear-gradient(135deg, #007AFF 0%, #00C6FF 100%);
+            transition: transform 0.2s;
+        }
+        .btn-primary:active { transform: scale(0.95); }
+        .card-shadow { box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+    </style>
 </head>
-<body>
+<body class="flex flex-col items-center p-6 min-h-screen">
 
-<div class="card">
-  <div class="header">
-    <div class="avatar">
-      <img src="https://i.imgur.com/8Km9tLL.png" alt="Avatar">
+    <div class="w-full max-w-sm mt-8 flex flex-col items-center">
+        <div class="relative">
+            <div class="w-32 h-32 rounded-full border-4 border-[#007AFF] p-1 overflow-hidden">
+                <img src="https://via.placeholder.com/150" alt="Avatar" class="w-full h-full object-cover rounded-full shadow-lg">
+            </div>
+            <div class="absolute bottom-1 right-1 bg-green-500 w-6 h-6 rounded-full border-4 border-[#050505]"></div>
+        </div>
+
+        <h1 class="mt-6 text-2xl font-bold tracking-tight">Tvoje Jméno</h1>
+        <p class="text-gray-400 font-medium">Creative Director & Founder</p>
+        
+        <p class="mt-4 text-center text-sm text-gray-500 px-4">
+            Pomáhám budovat značky, které vyčnívají z davu. Specialista na digitální strategie.
+        </p>
     </div>
-  </div>
 
-  <div class="body">
-    <!-- 🔧 UPRAVUJ JEN TYHLE ŘÁDKY -->
-    <h1>Brasko</h1>
-    <p>NFC vizitky & digitální projekty</p>
+    <div class="w-full max-w-sm mt-8 space-y-3">
+        <button class="btn-primary w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-2 shadow-lg">
+            <i class="fas fa-user-plus"></i> Uložit kontakt
+        </button>
+        <button class="glass w-full py-4 rounded-2xl font-semibold flex items-center justify-center gap-2 hover:bg-white/10 transition">
+            <i class="fas fa-calendar-alt"></i> Domluvit schůzku
+        </button>
+    </div>
 
-    <a class="primary" href="brasko.vcf">⬇️ Uložit do kontaktů</a>
-    <a class="secondary" href="tel:+420777123456">📞 Zavolat</a>
-    <a class="secondary" href="mailto:brasko@email.cz">✉️ Email</a>
-    <a class="secondary" href="https://www.instagram.com">📸 Instagram</a>
-    <a class="secondary" href="https://tvoje-stranka.cz">🌐 Web</a>
-  </div>
-</div>
+    <div class="w-full max-w-sm mt-8">
+        <h3 class="text-xs font-bold uppercase tracking-widest text-gray-600 mb-4 ml-2">Kde mě najdeš</h3>
+        <div class="grid grid-cols-2 gap-3">
+            <a href="#" class="glass p-4 flex flex-col items-center gap-2 hover:bg-white/5 transition">
+                <i class="fab fa-instagram text-2xl text-pink-500"></i>
+                <span class="text-sm font-medium">Instagram</span>
+            </a>
+            <a href="#" class="glass p-4 flex flex-col items-center gap-2 hover:bg-white/5 transition">
+                <i class="fab fa-linkedin text-2xl text-blue-600"></i>
+                <span class="text-sm font-medium">LinkedIn</span>
+            </a>
+            <a href="#" class="glass p-4 flex flex-col items-center gap-2 hover:bg-white/5 transition">
+                <i class="fab fa-whatsapp text-2xl text-green-500"></i>
+                <span class="text-sm font-medium">WhatsApp</span>
+            </a>
+            <a href="#" class="glass p-4 flex flex-col items-center gap-2 hover:bg-white/5 transition">
+                <i class="fas fa-globe text-2xl text-purple-500"></i>
+                <span class="text-sm font-medium">Web</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="w-full max-w-sm mt-8 mb-12">
+        <h3 class="text-xs font-bold uppercase tracking-widest text-gray-600 mb-4 ml-2">Poslední práce</h3>
+        <div class="glass overflow-hidden">
+            <img src="https://via.placeholder.com/400x200" alt="Project" class="w-full opacity-80">
+            <div class="p-4">
+                <p class="font-bold text-sm">Redesign Brandu 2026</p>
+                <p class="text-xs text-gray-500">Případová studie pro globální tech startup.</p>
+            </div>
+        </div>
+    </div>
+
+    <footer class="mt-auto py-6 text-gray-700 text-[10px] tracking-widest uppercase">
+        Powered by SmartNFC Technology
+    </footer>
 
 </body>
 </html>
