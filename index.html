@@ -5,27 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NFC Digital Identity | Elite Professional</title>
     <!-- 
-        NFC BUSINESS CARD - ELITE EDITION v3.1
+        NFC BUSINESS CARD - ELITE EDITION v3.2
         Features: 
+        - Auto-enabling submit button after auth
         - Smooth Gyroscope & Hover 3D (Subtle)
         - Cloud-based Review System (Firestore)
         - Dynamic Rating Graph
-        - Terminal logging system
-        - Robust Auth handling
     -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
         import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Configuration (Provided by environment)
+        // Firebase Configuration
         const firebaseConfig = JSON.parse(__firebase_config);
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
         const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
 
-        // Globals for simple script access
         window.db = db;
         window.auth = auth;
         window.appId = appId;
@@ -45,14 +43,21 @@
                 }
             } catch (error) {
                 console.error("Auth error:", error);
+                window.addTerminalLog("> Chyba autentizace.");
             }
         };
 
-        // Track auth state and trigger Firestore only when ready
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 window.currentUser = user;
-                // Start listening to reviews only after user is authenticated
+                // Enable UI elements
+                const submitBtn = document.getElementById('submitBtn');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.style.opacity = "1";
+                    submitBtn.innerText = "Odeslat recenzi";
+                }
+                window.addTerminalLog("> Identita ověřena.");
                 startReviewListener();
             }
         });
@@ -61,7 +66,6 @@
     </script>
 
     <style>
-        /* --- CORE DESIGN SYSTEM --- */
         :root {
             --primary-bg: #080808;
             --card-bg: #121212;
@@ -107,7 +111,7 @@
             border-radius: var(--radius-lg);
             padding: 40px 25px;
             box-shadow: 0 30px 60px rgba(0,0,0,0.8);
-            transition: transform 0.1s ease-out, box-shadow 0.3s ease;
+            transition: transform 0.1s ease-out;
             transform-style: preserve-3d;
             position: relative;
         }
@@ -136,16 +140,15 @@
             background: var(--accent-neon); color: #000;
         }
 
-        /* --- REVIEW BUTTONS --- */
         .review-trigger {
             width: 100%; padding: 15px; background: transparent;
             border: 2px solid var(--accent-neon); color: var(--accent-neon);
             border-radius: var(--radius-md); font-weight: 800; cursor: pointer;
             margin-top: 10px; transition: 0.3s; text-transform: uppercase;
         }
-        .review-trigger:hover { background: var(--accent-neon); color: #000; }
+        .review-trigger:hover:not(:disabled) { background: var(--accent-neon); color: #000; }
+        .review-trigger:disabled { opacity: 0.5; cursor: wait; border-color: #444; color: #444; }
 
-        /* --- MODAL SYSTEM --- */
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); z-index: 1000;
@@ -160,7 +163,6 @@
         }
         .close-modal { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 1.5rem; color: #666; }
 
-        /* --- REVIEW STYLES --- */
         .rating-stats { margin-bottom: 25px; }
         .stat-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
         .bar-bg { flex: 1; height: 8px; background: #222; border-radius: 10px; }
@@ -175,17 +177,17 @@
         .star-rating { display: flex; gap: 5px; margin-bottom: 15px; color: #444; font-size: 1.5rem; cursor: pointer; }
         .star.active { color: var(--accent-neon); }
 
-        .reviews-list { max-height: 300px; overflow-y: auto; margin-top: 20px; }
-        .review-item { background: #222; padding: 15px; border-radius: 12px; margin-bottom: 10px; }
+        .reviews-list { max-height: 300px; overflow-y: auto; margin-top: 20px; padding-right: 5px; }
+        .review-item { background: #222; padding: 15px; border-radius: 12px; margin-bottom: 10px; border: 1px solid transparent; transition: 0.3s; }
+        .review-item:hover { border-color: #333; }
         .review-item-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; }
         .review-stars { color: var(--accent-neon); }
 
-        /* --- TERMINAL --- */
         .terminal-block {
             margin-top: 25px; background: #000; border-radius: 8px;
             padding: 12px; font-family: var(--font-mono); border: 1px solid #333; font-size: 0.75rem;
         }
-        .terminal-body { color: var(--accent-neon); }
+        .terminal-body { color: var(--accent-neon); min-height: 1.2em; }
         .cursor { display: inline-block; width: 8px; height: 14px; background: var(--accent-neon); animation: blink 1s infinite; vertical-align: middle; }
         @keyframes blink { 50% { opacity: 0; } }
 
@@ -226,23 +228,17 @@
         </div>
     </div>
 
-    <!-- MODAL RECENZÍ -->
     <div id="reviewsModal" class="modal">
         <div class="modal-content">
             <span class="close-modal" onclick="toggleModal('reviewsModal')">✕</span>
             <h2 style="margin-bottom: 20px;">Hodnocení & Recenze</h2>
             
-            <!-- Graf hodnocení -->
-            <div class="rating-stats" id="ratingStats">
-                <!-- Dynamicky plněno JS -->
-            </div>
+            <div class="rating-stats" id="ratingStats"></div>
 
-            <!-- Seznam recenzí -->
             <div class="reviews-list" id="reviewsList">
                 <p style="color: #666; text-align: center;">Načítám recenze...</p>
             </div>
 
-            <!-- Formulář -->
             <div class="review-form">
                 <h3>Napsat recenzi</h3>
                 <div class="star-rating" id="formStars">
@@ -254,7 +250,7 @@
                 </div>
                 <input type="text" id="revName" placeholder="Tvoje jméno">
                 <textarea id="revText" placeholder="Tvůj vzkaz..." rows="3"></textarea>
-                <button class="review-trigger" id="submitBtn" onclick="submitReview()">Odeslat recenzi</button>
+                <button class="review-trigger" id="submitBtn" disabled style="opacity: 0.5;">Připojování...</button>
             </div>
         </div>
     </div>
@@ -262,15 +258,11 @@
     <div id="toast">Akce úspěšná!</div>
 
     <script>
-        // --- MODAL LOGIC ---
         function toggleModal(id) {
             document.getElementById(id).classList.toggle('active');
         }
 
-        // --- 3D INTERACTION (SUBTLE & GYRO) ---
         const card = document.getElementById('mainCard');
-        
-        // Desktop Hover
         document.addEventListener('mousemove', (e) => {
             if (window.innerWidth > 800) {
                 const xAxis = (window.innerWidth / 2 - e.pageX) / 90;
@@ -279,35 +271,37 @@
             }
         });
 
-        // Mobile Gyroscope
         window.addEventListener('deviceorientation', (e) => {
             if (window.innerWidth <= 800) {
                 const x = e.beta / 10;
                 const y = -e.gamma / 10;
-                const limitedX = Math.max(-15, Math.min(15, x));
-                const limitedY = Math.max(-15, Math.min(15, y));
-                card.style.transform = `rotateX(${limitedX}deg) rotateY(${limitedY}deg)`;
+                card.style.transform = `rotateX(${Math.max(-15, Math.min(15, x))}deg) rotateY(${Math.max(-15, Math.min(15, y))}deg)`;
             }
         });
 
-        // --- TERMINAL LOGIC ---
         const termLog = document.getElementById('termLog');
-        const logs = ["> Systém online.", "> Gyroskop aktivní.", "> NFC ID připraveno.", "> Žádné lagy."];
+        const logs = ["> Systém online.", "> Gyroskop aktivní.", "> NFC ID připraveno."];
         let currentLog = 0, charPos = 0, isDeleting = false;
+
+        window.addTerminalLog = (msg) => {
+            logs.push(msg);
+        };
 
         function updateTerminal() {
             const currentStr = logs[currentLog];
             if (!isDeleting) {
                 termLog.textContent = currentStr.substring(0, charPos++);
-                if (charPos > currentStr.length) { isDeleting = true; setTimeout(updateTerminal, 2000); return; }
+                if (charPos > currentStr.length) { isDeleting = true; setTimeout(updateTerminal, 2500); return; }
             } else {
                 termLog.textContent = currentStr.substring(0, charPos--);
-                if (charPos < 2) { isDeleting = false; currentLog = (currentLog + 1) % logs.length; }
+                if (charPos < 2) { 
+                    isDeleting = false; 
+                    currentLog = (currentLog + 1) % logs.length; 
+                }
             }
             setTimeout(updateTerminal, isDeleting ? 30 : 60);
         }
 
-        // --- REVIEW SYSTEM (FIRESTORE) ---
         let selectedRating = 5;
         const stars = document.querySelectorAll('#formStars .star');
         stars.forEach(s => {
@@ -320,17 +314,13 @@
 
         function startReviewListener() {
             if (!window.db || !window.appId) return;
-
             const revCol = window.collection(window.db, 'artifacts', window.appId, 'public', 'data', 'reviews');
-            
             window.onSnapshot(revCol, (snapshot) => {
                 const reviews = [];
                 snapshot.forEach(doc => reviews.push(doc.data()));
                 renderReviews(reviews);
                 renderStats(reviews);
-            }, (err) => {
-                console.error("Firestore error:", err);
-            });
+            }, (err) => console.error("Firestore error:", err));
         }
 
         function renderReviews(reviews) {
@@ -340,7 +330,6 @@
                 return;
             }
             reviews.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
-            
             list.innerHTML = reviews.map(r => `
                 <div class="review-item">
                     <div class="review-item-header">
@@ -356,7 +345,6 @@
             const statsCont = document.getElementById('ratingStats');
             const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
             reviews.forEach(r => { if (r.rating) counts[r.rating]++; });
-            
             const total = reviews.length || 1;
             let html = '';
             for (let i = 5; i >= 1; i--) {
@@ -373,16 +361,16 @@
         }
 
         async function submitReview() {
-            if (!window.currentUser) {
-                showToast("Počkej na přihlášení...");
-                return;
-            }
-            const name = document.getElementById('revName').value;
-            const text = document.getElementById('revText').value;
+            if (!window.currentUser) return;
+            const nameInput = document.getElementById('revName');
+            const textInput = document.getElementById('revText');
+            const name = nameInput.value;
+            const text = textInput.value;
             if (!text) return showToast("Napiš aspoň krátký vzkaz!");
 
             const btn = document.getElementById('submitBtn');
             btn.disabled = true;
+            btn.innerText = "Odesílám...";
 
             try {
                 const revCol = window.collection(window.db, 'artifacts', window.appId, 'public', 'data', 'reviews');
@@ -392,14 +380,14 @@
                     rating: selectedRating,
                     createdAt: window.serverTimestamp()
                 });
-                document.getElementById('revName').value = '';
-                document.getElementById('revText').value = '';
+                nameInput.value = '';
+                textInput.value = '';
                 showToast("Díky za recenzi! ❤️");
             } catch (e) {
-                console.error("Submission error:", e);
                 showToast("Chyba při odesílání.");
             } finally {
                 btn.disabled = false;
+                btn.innerText = "Odeslat recenzi";
             }
         }
 
@@ -416,7 +404,7 @@
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement("a");
             a.href = url; a.download = "karel_novak.vcf"; a.click();
-            showToast("Vizitka připravena! 👤");
+            showToast("Vizitka stažena! 👤");
         }
 
         window.onload = () => {
