@@ -10,7 +10,7 @@
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Lucide React UMD -->
+    <!-- Lucide React UMD Build -->
     <script src="https://unpkg.com/lucide-react@0.344.0/dist/umd/lucide-react.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
@@ -20,25 +20,30 @@
             margin: 0;
             padding: 0;
         }
+        /* Skrytí scrollbaru pro čistý vzhled */
+        ::-webkit-scrollbar {
+            display: none;
+        }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        // Explicitní zajištění, že React je v globálním okně pro Lucide
+        // Zajištění přístupu k Reactu pro Lucide ikony
         window.React = React;
 
         const { useState } = React;
         
+        // Komponenta pro ikony z knihovny Lucide
         const Icon = ({ name, size = 24, className = "" }) => {
-            // Bezpečné načtení ikony z LucideReact objektu
             const lib = window.LucideReact || {};
             const LucideIcon = lib[name] || lib.Globe || (() => <span className="text-xs">?</span>);
             return <LucideIcon size={size} className={className} />;
         };
 
         const App = () => {
+            // Seznam platforem a jejich stylů
             const platforms = [
                 { 
                     id: 'instagram', 
@@ -114,6 +119,7 @@
                 }
             ];
 
+            // Výchozí profilové údaje
             const [profile, setProfile] = useState({
                 name: "Jan Novák",
                 title: "Creative Director",
@@ -121,6 +127,7 @@
                 avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=200&h=200&fit=crop"
             });
 
+            // Výchozí odkazy
             const [links, setLinks] = useState([
                 { id: '1', platformId: 'instagram', name: 'Instagram', url: 'https://instagram.com' },
                 { id: '2', platformId: 'github', name: 'GitHub', url: 'https://github.com' },
@@ -128,6 +135,7 @@
                 { id: '4', platformId: 'web', name: 'Můj Web', url: 'https://google.com' }
             ]);
 
+            // Stavy pro editor
             const [editingIndex, setEditingIndex] = useState(null);
             const [tempItem, setTempItem] = useState({ platformId: 'web', name: '', url: '' });
             const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -167,7 +175,7 @@
                 <div className="min-h-screen bg-slate-50 flex justify-center items-start sm:py-10 font-sans text-slate-900">
                     <div className="w-full max-w-[390px] bg-white sm:rounded-[3rem] shadow-2xl overflow-hidden min-h-screen sm:min-h-0 flex flex-col border border-slate-100">
                         
-                        {/* Header */}
+                        {/* Záhlaví s fotkou */}
                         <div className="h-32 bg-slate-900 relative">
                             <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
                                 <div className="relative group">
@@ -196,7 +204,7 @@
                             </p>
                         </div>
 
-                        {/* Mřížka slotů */}
+                        {/* Mřížka 2x2 */}
                         <div className="px-8 pt-10 pb-8">
                             <div className="grid grid-cols-2 gap-5">
                                 {links.map((link, index) => {
@@ -234,18 +242,20 @@
                             </div>
                         </div>
 
+                        {/* Akční tlačítko */}
                         <div className="mt-auto p-6 space-y-3 bg-slate-50/50">
                             <button className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl shadow-slate-200 flex items-center justify-center gap-2 text-sm hover:bg-slate-800 transition-all active:scale-95">
                                 <Icon name="Download" size={18} /> ULOŽIT KONTAKT
                             </button>
                         </div>
 
+                        {/* Zápatí */}
                         <div className="pb-8 text-center text-[9px] text-slate-300 font-bold uppercase tracking-[0.3em]">
                             NFC SMART EDITOR PRO
                         </div>
                     </div>
 
-                    {/* Editor slotů */}
+                    {/* Editor slotu */}
                     {editingIndex !== null && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
                             <div className="bg-white rounded-[3rem] w-full max-w-md p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
@@ -256,36 +266,53 @@
                                     </button>
                                 </div>
                                 <div className="space-y-6">
-                                    <div className="grid grid-cols-4 gap-3">
-                                        {platforms.map((p) => (
-                                            <button
-                                                key={p.id}
-                                                onClick={() => selectPlatform(p)}
-                                                className={`aspect-square flex flex-col items-center justify-center gap-1 p-2 rounded-2xl transition-all border-2 relative ${
-                                                    tempItem.platformId === p.id ? 'border-blue-500 bg-blue-50 scale-105' : 'border-slate-50 bg-slate-50'
-                                                }`}
-                                            >
-                                                <div className={tempItem.platformId === p.id ? "text-blue-500" : "text-slate-400"}>
-                                                    <Icon name={p.fallbackIcon} size={24} />
-                                                </div>
-                                                <span className="text-[8px] font-bold uppercase truncate w-full text-center">{p.name}</span>
-                                            </button>
-                                        ))}
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Vyber platformu</label>
+                                        <div className="grid grid-cols-4 gap-3">
+                                            {platforms.map((p) => (
+                                                <button
+                                                    key={p.id}
+                                                    onClick={() => selectPlatform(p)}
+                                                    className={`aspect-square flex flex-col items-center justify-center gap-1 p-2 rounded-2xl transition-all border-2 relative ${
+                                                        tempItem.platformId === p.id 
+                                                        ? 'border-blue-500 bg-blue-50 scale-105' 
+                                                        : 'border-slate-50 bg-slate-50 hover:bg-white hover:border-slate-200'
+                                                    }`}
+                                                >
+                                                    <div className={tempItem.platformId === p.id ? "text-blue-500" : "text-slate-400"}>
+                                                        <Icon name={p.fallbackIcon} size={24} />
+                                                    </div>
+                                                    <span className="text-[8px] font-bold uppercase truncate w-full text-center">{p.name}</span>
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
+
                                     <form onSubmit={saveLink} className="space-y-4">
-                                        <input 
-                                            type="text" value={tempItem.url}
-                                            onChange={(e) => setTempItem({...tempItem, url: e.target.value})}
-                                            className="w-full p-4 bg-slate-100 rounded-2xl outline-none border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500"
-                                            placeholder="URL adresa"
-                                        />
-                                        <input 
-                                            type="text" value={tempItem.name}
-                                            onChange={(e) => setTempItem({...tempItem, name: e.target.value})}
-                                            className="w-full p-4 bg-slate-100 rounded-2xl outline-none border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500"
-                                            placeholder="Vlastní název"
-                                        />
-                                        <button type="submit" className="w-full bg-blue-600 text-white font-bold py-5 rounded-3xl active:scale-95 transition-all uppercase tracking-widest text-sm">Hotovo</button>
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">URL adresa</label>
+                                            <input 
+                                                type="text" value={tempItem.url}
+                                                onChange={(e) => setTempItem({...tempItem, url: e.target.value})}
+                                                className="w-full p-4 bg-slate-100 rounded-2xl outline-none border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 font-medium"
+                                                placeholder={getPlatformStyle(tempItem.platformId).placeholder}
+                                            />
+                                        </div>
+
+                                        <div className="space-y-1">
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Vlastní název</label>
+                                            <input 
+                                                type="text" value={tempItem.name}
+                                                onChange={(e) => setTempItem({...tempItem, name: e.target.value})}
+                                                className="w-full p-4 bg-slate-100 rounded-2xl outline-none border-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 font-medium"
+                                            />
+                                        </div>
+
+                                        <div className="pt-2">
+                                            <button type="submit" className="w-full bg-blue-600 text-white font-bold py-5 rounded-3xl shadow-lg shadow-blue-200 active:scale-95 transition-all uppercase tracking-widest text-sm">
+                                                Hotovo
+                                            </button>
+                                        </div>
                                     </form>
                                 </div>
                             </div>
@@ -301,30 +328,40 @@
                                     <button onClick={() => setIsEditingProfile(false)}><Icon name="X" size={24} /></button>
                                 </div>
                                 <div className="space-y-4">
-                                    <input 
-                                        type="text" value={profile.avatar}
-                                        onChange={(e) => setProfile({...profile, avatar: e.target.value})}
-                                        className="w-full p-4 bg-slate-50 rounded-2xl outline-none border-none ring-1 ring-slate-100 text-xs"
-                                        placeholder="URL fotky"
-                                    />
-                                    <input 
-                                        type="text" value={profile.name}
-                                        onChange={(e) => setProfile({...profile, name: e.target.value})}
-                                        className="w-full p-4 bg-slate-50 rounded-2xl outline-none border-none ring-1 ring-slate-100 font-bold"
-                                        placeholder="Jméno"
-                                    />
-                                    <input 
-                                        type="text" value={profile.title}
-                                        onChange={(e) => setProfile({...profile, title: e.target.value})}
-                                        className="w-full p-4 bg-slate-50 rounded-2xl outline-none border-none ring-1 ring-slate-100"
-                                        placeholder="Pozice"
-                                    />
-                                    <textarea 
-                                        value={profile.bio}
-                                        onChange={(e) => setProfile({...profile, bio: e.target.value})}
-                                        className="w-full p-4 bg-slate-50 rounded-2xl outline-none border-none ring-1 ring-slate-100 h-24"
-                                        placeholder="Bio..."
-                                    />
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">URL profilové fotky</label>
+                                        <input 
+                                            type="text" value={profile.avatar}
+                                            onChange={(e) => setProfile({...profile, avatar: e.target.value})}
+                                            className="w-full p-4 bg-slate-50 rounded-2xl outline-none border-none ring-1 ring-slate-100 text-xs"
+                                            placeholder="URL fotky"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Jméno</label>
+                                        <input 
+                                            type="text" value={profile.name}
+                                            onChange={(e) => setProfile({...profile, name: e.target.value})}
+                                            className="w-full p-4 bg-slate-50 rounded-2xl outline-none border-none ring-1 ring-slate-100 font-bold"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Pozice</label>
+                                        <input 
+                                            type="text" value={profile.title}
+                                            onChange={(e) => setProfile({...profile, title: e.target.value})}
+                                            className="w-full p-4 bg-slate-50 rounded-2xl outline-none border-none ring-1 ring-slate-100"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Bio</label>
+                                        <textarea 
+                                            value={profile.bio}
+                                            onChange={(e) => setProfile({...profile, bio: e.target.value})}
+                                            className="w-full p-4 bg-slate-50 rounded-2xl outline-none border-none ring-1 ring-slate-100 h-24"
+                                            placeholder="Napiš něco o sobě..."
+                                        />
+                                    </div>
                                     <button onClick={() => setIsEditingProfile(false)} className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl mt-4 uppercase tracking-widest active:scale-95 transition-all">Uložit</button>
                                 </div>
                             </div>
