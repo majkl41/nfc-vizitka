@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moje NFC Vizitka</title>
-    <!-- Tailwind CSS pro stylování -->
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React a Babel pro běh JSX v prohlížeči -->
+    <!-- React a Babel -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Lucide React UMD build -->
+    <!-- Lucide React UMD -->
     <script src="https://unpkg.com/lucide-react@0.344.0/dist/umd/lucide-react.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
@@ -26,12 +26,15 @@
     <div id="root"></div>
 
     <script type="text/babel">
+        // Explicitní zajištění, že React je v globálním okně pro Lucide
+        window.React = React;
+
         const { useState } = React;
         
-        // Komponenta pro ikony využívající globální objekt LucideReact
         const Icon = ({ name, size = 24, className = "" }) => {
-            // V UMD verzi lucide-react je vše pod globálním objektem LucideReact
-            const LucideIcon = LucideReact[name] || LucideReact.Globe;
+            // Bezpečné načtení ikony z LucideReact objektu
+            const lib = window.LucideReact || {};
+            const LucideIcon = lib[name] || lib.Globe || (() => <span className="text-xs">?</span>);
             return <LucideIcon size={size} className={className} />;
         };
 
@@ -164,6 +167,7 @@
                 <div className="min-h-screen bg-slate-50 flex justify-center items-start sm:py-10 font-sans text-slate-900">
                     <div className="w-full max-w-[390px] bg-white sm:rounded-[3rem] shadow-2xl overflow-hidden min-h-screen sm:min-h-0 flex flex-col border border-slate-100">
                         
+                        {/* Header */}
                         <div className="h-32 bg-slate-900 relative">
                             <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
                                 <div className="relative group">
@@ -183,6 +187,7 @@
                             </div>
                         </div>
 
+                        {/* Profilové info */}
                         <div className="pt-16 px-6 text-center space-y-1">
                             <h1 className="text-xl font-bold tracking-tight">{profile.name}</h1>
                             <p className="text-sm font-medium text-blue-600 uppercase tracking-widest text-[10px]">{profile.title}</p>
@@ -191,6 +196,7 @@
                             </p>
                         </div>
 
+                        {/* Mřížka slotů */}
                         <div className="px-8 pt-10 pb-8">
                             <div className="grid grid-cols-2 gap-5">
                                 {links.map((link, index) => {
@@ -239,7 +245,7 @@
                         </div>
                     </div>
 
-                    {/* Modal pro editaci slotu */}
+                    {/* Editor slotů */}
                     {editingIndex !== null && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
                             <div className="bg-white rounded-[3rem] w-full max-w-md p-8 shadow-2xl overflow-y-auto max-h-[90vh]">
@@ -286,7 +292,7 @@
                         </div>
                     )}
 
-                    {/* Modal pro editaci profilu */}
+                    {/* Editor profilu */}
                     {isEditingProfile && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
                             <div className="bg-white rounded-[3rem] w-full max-sm:max-w-xs p-8 shadow-2xl">
