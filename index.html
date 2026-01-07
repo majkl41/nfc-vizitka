@@ -37,13 +37,12 @@
         // Komponenta pro ikony z knihovny Lucide
         const Icon = ({ name, size = 24, className = "" }) => {
             const lib = window.LucideReact || {};
-            // Odstraněn otazníček - pokud ikona neexistuje, použije se Link, Globe nebo nic
             const LucideIcon = lib[name] || lib.Link || lib.Globe || (() => null);
             return <LucideIcon size={size} className={className} />;
         };
 
         const App = () => {
-            // Seznam platforem, jejich barvy a výchozí ikony
+            // Seznam platforem, barvy a loga
             const platforms = [
                 { 
                     id: 'instagram', 
@@ -78,6 +77,38 @@
                     placeholder: 'github.com/tvoje_jmeno' 
                 },
                 { 
+                    id: 'discord', 
+                    name: 'Discord', 
+                    color: 'bg-[#5865F2]', 
+                    logo: 'https://unavatar.io/discord.com', 
+                    fallbackIcon: 'MessageSquare',
+                    placeholder: 'discord.gg/...' 
+                },
+                { 
+                    id: 'whatsapp', 
+                    name: 'WhatsApp', 
+                    color: 'bg-[#25D366]', 
+                    logo: 'https://unavatar.io/whatsapp.com', 
+                    fallbackIcon: 'MessageCircle',
+                    placeholder: 'wa.me/420...' 
+                },
+                { 
+                    id: 'twitch', 
+                    name: 'Twitch', 
+                    color: 'bg-[#9146FF]', 
+                    logo: 'https://unavatar.io/twitch.tv', 
+                    fallbackIcon: 'Twitch',
+                    placeholder: 'twitch.tv/tvoje_jmeno' 
+                },
+                { 
+                    id: 'pinterest', 
+                    name: 'Pinterest', 
+                    color: 'bg-[#BD081C]', 
+                    logo: 'https://unavatar.io/pinterest.com', 
+                    fallbackIcon: 'Pin',
+                    placeholder: 'pinterest.com/tvoje_jmeno' 
+                },
+                { 
                     id: 'facebook', 
                     name: 'Facebook', 
                     color: 'bg-[#1877F2]', 
@@ -110,6 +141,30 @@
                     placeholder: 'open.spotify.com/user/...' 
                 },
                 { 
+                    id: 'snapchat', 
+                    name: 'Snapchat', 
+                    color: 'bg-[#FFFC00]', 
+                    logo: 'https://unavatar.io/snapchat.com', 
+                    fallbackIcon: 'Ghost',
+                    placeholder: 'snapchat.com/add/...' 
+                },
+                { 
+                    id: 'telegram', 
+                    name: 'Telegram', 
+                    color: 'bg-[#0088cc]', 
+                    logo: 'https://unavatar.io/telegram.org', 
+                    fallbackIcon: 'Send',
+                    placeholder: 't.me/tvoje_jmeno' 
+                },
+                { 
+                    id: 'reddit', 
+                    name: 'Reddit', 
+                    color: 'bg-[#FF4500]', 
+                    logo: 'https://unavatar.io/reddit.com', 
+                    fallbackIcon: 'MessageSquare',
+                    placeholder: 'reddit.com/user/...' 
+                },
+                { 
                     id: 'web', 
                     name: 'Web', 
                     color: 'bg-slate-800', 
@@ -119,7 +174,6 @@
                 }
             ];
 
-            // Výchozí profilové údaje
             const [profile, setProfile] = useState({
                 name: "Jan Novák",
                 title: "Creative Director",
@@ -127,7 +181,6 @@
                 avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop"
             });
 
-            // Výchozí odkazy
             const [links, setLinks] = useState([
                 { id: '1', platformId: 'instagram', name: 'Instagram', url: 'https://instagram.com', customIconUrl: '' },
                 { id: '2', platformId: 'github', name: 'GitHub', url: 'https://github.com', customIconUrl: '' },
@@ -173,7 +226,7 @@
 
             return (
                 <div className="min-h-screen bg-slate-50 flex justify-center items-start sm:py-10 font-sans text-slate-900">
-                    <div className="w-full max-w-[390px] bg-white sm:rounded-[3rem] shadow-2xl overflow-hidden min-h-screen sm:min-h-0 flex flex-col border border-slate-100">
+                    <div className="w-full max-w-[390px] bg-white sm:rounded-[3rem] shadow-2xl overflow-hidden min-h-screen sm:min-h-0 flex flex-col border border-slate-100 relative">
                         
                         {/* Záhlaví */}
                         <div className="h-32 bg-slate-900 relative">
@@ -185,14 +238,14 @@
                                         alt="Profil"
                                         onError={(e) => { e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(profile.name); }}
                                     />
-                                    <button className="absolute -bottom-1 -right-1 p-1.5 bg-blue-600 rounded-full shadow-md text-white">
+                                    <button className="absolute -bottom-1 -right-1 p-1.5 bg-blue-600 rounded-full shadow-md text-white transition-all hover:scale-110 shadow-lg">
                                         <Icon name="Settings" size={14} />
                                     </button>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Text pod fotkou */}
+                        {/* Profilové info */}
                         <div className="pt-16 px-6 text-center space-y-1">
                             <h1 className="text-xl font-bold tracking-tight">{profile.name}</h1>
                             <p className="text-sm font-medium text-blue-600 uppercase tracking-widest text-[10px]">{profile.title}</p>
@@ -201,7 +254,7 @@
                             </p>
                         </div>
 
-                        {/* Hlavní mřížka */}
+                        {/* Mřížka 2x2 */}
                         <div className="px-8 pt-10 pb-8">
                             <div className="grid grid-cols-2 gap-5">
                                 {links.map((link, index) => {
@@ -229,7 +282,7 @@
                                                     </div>
                                                 )}
                                                 
-                                                <span className="text-[11px] font-black uppercase tracking-wider z-10 text-white truncate w-full px-1">
+                                                <span className={`text-[11px] font-black uppercase tracking-wider z-10 truncate w-full px-1 ${link.platformId === 'snapchat' ? 'text-black' : 'text-white'}`}>
                                                     {link.name}
                                                 </span>
                                                 <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-20 text-white/50">
@@ -242,6 +295,7 @@
                             </div>
                         </div>
 
+                        {/* Akční tlačítko */}
                         <div className="mt-auto p-6 space-y-3 bg-slate-50/50">
                             <button className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl shadow-slate-200 flex items-center justify-center gap-2 text-sm hover:bg-slate-800 transition-all active:scale-95">
                                 <Icon name="Download" size={18} /> ULOŽIT KONTAKT
@@ -256,65 +310,79 @@
                     {/* Editor čtverečku */}
                     {editingIndex !== null && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-                            <div className="bg-white rounded-[3rem] w-full max-w-md p-8 shadow-2xl overflow-y-auto max-h-[90vh] relative">
+                            <div className="bg-white rounded-[3rem] w-full max-w-md p-8 shadow-2xl overflow-y-auto max-h-[90vh] relative border border-white/20">
                                 <div className="flex justify-between items-center mb-6">
                                     <h3 className="text-xl font-black uppercase tracking-tight">Upravit odkaz</h3>
                                     <button onClick={() => setEditingIndex(null)} className="p-2 bg-slate-100 hover:bg-red-500 hover:text-white rounded-full transition-all">
                                         <Icon name="X" size={24} />
                                     </button>
                                 </div>
+                                
                                 <div className="space-y-6">
-                                    <div className="space-y-2">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Vyber platformu</label>
-                                        <div className="grid grid-cols-4 gap-3">
+                                    {/* Výběr platformy s vizuálními logy */}
+                                    <div className="space-y-3">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">Platforma</label>
+                                        <div className="grid grid-cols-4 gap-2">
                                             {platforms.map((p) => (
                                                 <button
                                                     key={p.id}
                                                     onClick={() => selectPlatform(p)}
-                                                    className={`aspect-square flex flex-col items-center justify-center gap-1 p-2 rounded-2xl transition-all border-2 relative ${
-                                                        tempItem.platformId === p.id ? 'border-blue-500 bg-blue-50' : 'border-slate-50 bg-slate-50 hover:bg-white hover:border-slate-200'
+                                                    className={`aspect-square flex flex-col items-center justify-center gap-1 rounded-2xl transition-all border-2 relative overflow-hidden ${
+                                                        tempItem.platformId === p.id ? 'border-blue-500 bg-blue-50/50 scale-105 shadow-md' : 'border-slate-50 bg-slate-50 hover:bg-white hover:border-slate-200'
                                                     }`}
                                                 >
-                                                    <div className={tempItem.platformId === p.id ? "text-blue-500" : "text-slate-400"}>
-                                                        <Icon name={p.fallbackIcon} size={24} />
+                                                    <div className="w-8 h-8 flex items-center justify-center relative z-10">
+                                                        {p.logo ? (
+                                                            <img 
+                                                                src={p.logo} 
+                                                                className={`w-6 h-6 object-contain rounded-md ${tempItem.platformId !== p.id ? 'grayscale opacity-40' : ''}`} 
+                                                                alt={p.name}
+                                                                onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
+                                                            />
+                                                        ) : null}
+                                                        <div style={{ display: p.logo ? 'none' : 'block' }} className={tempItem.platformId === p.id ? "text-blue-500" : "text-slate-400"}>
+                                                            <Icon name={p.fallbackIcon} size={18} />
+                                                        </div>
                                                     </div>
-                                                    <span className="text-[8px] font-bold uppercase truncate w-full text-center">{p.name}</span>
+                                                    <span className={`text-[8px] font-bold uppercase truncate w-full text-center px-1 mt-0.5 ${tempItem.platformId === p.id ? 'text-blue-600' : 'text-slate-400'}`}>
+                                                        {p.name}
+                                                    </span>
                                                 </button>
                                             ))}
                                         </div>
                                     </div>
 
-                                    <form onSubmit={saveLink} className="space-y-4">
+                                    <form onSubmit={saveLink} className="space-y-5 pt-2 border-t border-slate-100">
                                         <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">URL adresa</label>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">URL adresa</label>
                                             <input 
                                                 type="text" value={tempItem.url}
                                                 onChange={(e) => setTempItem({...tempItem, url: e.target.value})}
-                                                className="w-full p-4 bg-slate-100 rounded-2xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500 font-medium"
+                                                className="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-blue-500 font-medium transition-all"
                                                 placeholder="https://..."
                                             />
                                         </div>
 
                                         <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Vlastní odkaz na fotku/ikonu (URL)</label>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">Vlastní logo (URL)</label>
                                             <input 
                                                 type="text" value={tempItem.customIconUrl}
                                                 onChange={(e) => setTempItem({...tempItem, customIconUrl: e.target.value})}
-                                                className="w-full p-4 bg-slate-100 rounded-2xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500"
-                                                placeholder="https://odkaz-na-obrazek.cz/foto.jpg"
+                                                className="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-blue-500 font-medium"
+                                                placeholder="Odkaz na .jpg nebo .png"
                                             />
                                         </div>
 
                                         <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Název pod ikonou</label>
+                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">Název v mřížce</label>
                                             <input 
                                                 type="text" value={tempItem.name}
                                                 onChange={(e) => setTempItem({...tempItem, name: e.target.value})}
-                                                className="w-full p-4 bg-slate-100 rounded-2xl outline-none ring-1 ring-slate-200 focus:ring-2 focus:ring-blue-500"
+                                                className="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-blue-500 font-medium"
                                             />
                                         </div>
 
-                                        <button type="submit" className="w-full bg-blue-600 text-white font-bold py-5 rounded-3xl uppercase tracking-widest text-sm active:scale-95 transition-all">
+                                        <button type="submit" className="w-full bg-blue-600 text-white font-bold py-5 rounded-3xl uppercase tracking-widest text-sm active:scale-95 transition-all shadow-lg shadow-blue-200">
                                             Uložit změny
                                         </button>
                                     </form>
@@ -326,40 +394,47 @@
                     {/* Editor profilu */}
                     {isEditingProfile && (
                         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-                            <div className="bg-white rounded-[3rem] w-full max-sm:max-w-xs p-8 shadow-2xl relative">
+                            <div className="bg-white rounded-[3rem] w-full max-sm:max-w-xs p-8 shadow-2xl relative border border-white/20">
                                 <div className="flex justify-between items-center mb-6">
-                                    <h3 className="text-xl font-bold">Profil</h3>
+                                    <h3 className="text-xl font-black uppercase">Profil</h3>
                                     <button onClick={() => setIsEditingProfile(false)} className="p-2 bg-slate-100 hover:bg-red-500 hover:text-white rounded-full transition-all">
                                         <Icon name="X" size={24} />
                                     </button>
                                 </div>
                                 <div className="space-y-4">
                                     <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Odkaz na fotku (URL)</label>
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">URL fotky</label>
                                         <input 
                                             type="text" value={profile.avatar}
                                             onChange={(e) => setProfile({...profile, avatar: e.target.value})}
-                                            className="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 text-xs"
+                                            className="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 text-xs font-medium"
                                         />
                                     </div>
-                                    <input 
-                                        type="text" value={profile.name}
-                                        onChange={(e) => setProfile({...profile, name: e.target.value})}
-                                        className="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 font-bold"
-                                        placeholder="Jméno"
-                                    />
-                                    <input 
-                                        type="text" value={profile.title}
-                                        onChange={(e) => setProfile({...profile, title: e.target.value})}
-                                        className="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100"
-                                        placeholder="Pozice"
-                                    />
-                                    <textarea 
-                                        value={profile.bio}
-                                        onChange={(e) => setProfile({...profile, bio: e.target.value})}
-                                        className="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 h-24"
-                                    />
-                                    <button onClick={() => setIsEditingProfile(false)} className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl mt-4 uppercase tracking-widest active:scale-95 transition-all">Uložit</button>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">Jméno</label>
+                                        <input 
+                                            type="text" value={profile.name}
+                                            onChange={(e) => setProfile({...profile, name: e.target.value})}
+                                            className="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 font-bold"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">Pozice</label>
+                                        <input 
+                                            type="text" value={profile.title}
+                                            onChange={(e) => setProfile({...profile, title: e.target.value})}
+                                            className="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 font-medium"
+                                        />
+                                    </div>
+                                    <div className="space-y-1">
+                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">Bio</label>
+                                        <textarea 
+                                            value={profile.bio}
+                                            onChange={(e) => setProfile({...profile, bio: e.target.value})}
+                                            className="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 h-24 font-medium"
+                                        />
+                                    </div>
+                                    <button onClick={() => setIsEditingProfile(false)} className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl mt-4 uppercase tracking-widest active:scale-95 transition-all shadow-lg">Uložit</button>
                                 </div>
                             </div>
                         </div>
