@@ -20,6 +20,11 @@
             margin: 0;
             padding: 0;
         }
+        /* Zajištění ostrých obrázků */
+        img {
+            image-rendering: -webkit-optimize-contrast;
+            image-rendering: crisp-edges;
+        }
         ::-webkit-scrollbar {
             display: none;
         }
@@ -254,7 +259,7 @@
                             </p>
                         </div>
 
-                        {/* Mřížka 2x2 */}
+                        {/* Mřížka 2x2 - UPRAVENO: Vrstvený design (Barva -> Bílá -> Zmenšené logo) */}
                         <div className="px-8 pt-10 pb-8">
                             <div className="grid grid-cols-2 gap-5">
                                 {links.map((link, index) => {
@@ -267,20 +272,27 @@
                                                 onClick={() => openEdit(index)}
                                                 className={`w-full aspect-square flex flex-col items-center justify-center gap-3 p-5 rounded-[2.5rem] shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 relative overflow-hidden ${style.color}`}
                                             >
-                                                {link.customIconUrl ? (
-                                                    <img src={link.customIconUrl} className="w-12 h-12 object-cover rounded-xl z-10 brightness-110 shadow-sm" alt="" />
-                                                ) : style.logo && !hasError ? (
-                                                    <img 
-                                                        src={style.logo} 
-                                                        className="w-12 h-12 object-contain rounded-xl z-10 brightness-110 shadow-sm bg-white/10" 
-                                                        alt="" 
-                                                        onError={() => handleImageError(link.id)}
-                                                    />
-                                                ) : (
-                                                    <div className="text-white z-10">
-                                                        <Icon name={style.fallbackIcon} size={32} />
-                                                    </div>
-                                                )}
+                                                {/* Bílá vrstva (Kruh/Zaoblený čtverec) */}
+                                                <div className="relative z-10 w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-md overflow-hidden p-2.5">
+                                                    {link.customIconUrl ? (
+                                                        <img 
+                                                            src={link.customIconUrl} 
+                                                            className="w-full h-full object-contain" 
+                                                            alt="" 
+                                                        />
+                                                    ) : style.logo && !hasError ? (
+                                                        <img 
+                                                            src={style.logo} 
+                                                            className="w-full h-full object-contain" 
+                                                            alt="" 
+                                                            onError={() => handleImageError(link.id)}
+                                                        />
+                                                    ) : (
+                                                        <div className="text-slate-400">
+                                                            <Icon name={style.fallbackIcon} size={28} />
+                                                        </div>
+                                                    )}
+                                                </div>
                                                 
                                                 <span className={`text-[11px] font-black uppercase tracking-wider z-10 truncate w-full px-1 ${link.platformId === 'snapchat' ? 'text-black' : 'text-white'}`}>
                                                     {link.name}
@@ -297,7 +309,7 @@
 
                         {/* Akční tlačítko */}
                         <div className="mt-auto p-6 space-y-3 bg-slate-50/50">
-                            <button className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl shadow-slate-200 flex items-center justify-center gap-2 text-sm hover:bg-slate-800 transition-all active:scale-95">
+                            <button className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 text-sm hover:bg-slate-800 transition-all active:scale-95">
                                 <Icon name="Download" size={18} /> ULOŽIT KONTAKT
                             </button>
                         </div>
@@ -319,7 +331,7 @@
                                 </div>
                                 
                                 <div className="space-y-6">
-                                    {/* Výběr platformy s vizuálními logy */}
+                                    {/* Výběr platformy */}
                                     <div className="space-y-3">
                                         <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">Platforma</label>
                                         <div className="grid grid-cols-4 gap-2">
@@ -328,23 +340,23 @@
                                                     key={p.id}
                                                     onClick={() => selectPlatform(p)}
                                                     className={`aspect-square flex flex-col items-center justify-center gap-1 rounded-2xl transition-all border-2 relative overflow-hidden ${
-                                                        tempItem.platformId === p.id ? 'border-blue-500 bg-blue-50/50 scale-105 shadow-md' : 'border-slate-50 bg-slate-50 hover:bg-white hover:border-slate-200'
+                                                        tempItem.platformId === p.id ? 'border-blue-500 bg-blue-50 scale-105 shadow-md' : 'border-slate-50 bg-slate-50 hover:bg-white hover:border-slate-200'
                                                     }`}
                                                 >
-                                                    <div className="w-8 h-8 flex items-center justify-center relative z-10">
+                                                    <div className="w-10 h-10 flex items-center justify-center relative z-10 bg-white rounded-lg shadow-sm mb-0.5">
                                                         {p.logo ? (
                                                             <img 
                                                                 src={p.logo} 
-                                                                className={`w-6 h-6 object-contain rounded-md ${tempItem.platformId !== p.id ? 'grayscale opacity-40' : ''}`} 
+                                                                className={`w-7 h-7 object-contain ${tempItem.platformId !== p.id ? 'grayscale opacity-40' : ''}`} 
                                                                 alt={p.name}
                                                                 onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
                                                             />
                                                         ) : null}
                                                         <div style={{ display: p.logo ? 'none' : 'block' }} className={tempItem.platformId === p.id ? "text-blue-500" : "text-slate-400"}>
-                                                            <Icon name={p.fallbackIcon} size={18} />
+                                                            <Icon name={p.fallbackIcon} size={20} />
                                                         </div>
                                                     </div>
-                                                    <span className={`text-[8px] font-bold uppercase truncate w-full text-center px-1 mt-0.5 ${tempItem.platformId === p.id ? 'text-blue-600' : 'text-slate-400'}`}>
+                                                    <span className={`text-[8px] font-bold uppercase truncate w-full text-center px-1 ${tempItem.platformId === p.id ? 'text-blue-600' : 'text-slate-400'}`}>
                                                         {p.name}
                                                     </span>
                                                 </button>
