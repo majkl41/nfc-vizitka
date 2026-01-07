@@ -3,215 +3,153 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oldschool Performance Edition</title>
+    <title>NFC Vizitka | Digital Identity</title>
     <style>
-        /* --- ZÁKLADNÍ NASTAVENÍ (BACK TO BASICS) --- */
         :root {
-            --primary-color: #007bff;
-            --secondary-color: #6c757d;
-            --bg-dark: #121212;
-            --card-bg: #1e1e1e;
-            --text-color: #e0e0e0;
-            --accent-color: #00ffcc;
-            --transition-speed: 0.3s;
+            --accent: #00ffcc; /* Ta tvoje barva ze screenu */
+            --bg: #0a0a0a;
+            --card-bg: #161616;
+            --text: #ffffff;
+            --transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
 
         body {
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-dark);
-            color: var(--text-color);
-            overflow-x: hidden;
-            /* Tady je to pozadí, co tě bavilo - decentní animovaný gradient */
-            background: linear-gradient(135deg, #121212 25%, #1a1a1a 100%);
+            background-color: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             min-height: 100vh;
         }
 
-        /* --- BACKGROUND EFEKT (Nezatěžuje, ale vypadá to cool) --- */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0;
-            left: 0;
+        .nfc-card {
             width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 50% 50%, rgba(0, 255, 204, 0.05) 0%, transparent 80%);
-            pointer-events: none;
-            z-index: -1;
-        }
-
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 40px 20px;
-        }
-
-        header {
+            max-width: 400px;
+            padding: 20px;
             text-align: center;
-            margin-bottom: 50px;
-            border-bottom: 2px solid var(--card-bg);
-            padding-bottom: 20px;
+        }
+
+        /* --- PROFIL --- */
+        .profile-img {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            border: 3px solid var(--accent);
+            margin-bottom: 15px;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
         }
 
         h1 {
-            font-size: 2.5rem;
-            letter-spacing: 2px;
+            margin: 10px 0 5px 0;
+            font-size: 1.8rem;
+        }
+
+        .job-title {
+            color: var(--accent);
+            font-size: 1rem;
+            margin-bottom: 30px;
             text-transform: uppercase;
-            color: var(--accent-color);
+            letter-spacing: 1px;
         }
 
-        /* --- TLAČÍTKA A INTERAKCE (To co jsi chtěl) --- */
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
+        /* --- TLAČÍTKA (To zvětšování a barvy) --- */
+        .links {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
 
-        .card {
+        .link-btn {
             background: var(--card-bg);
-            padding: 25px;
+            color: white;
+            text-decoration: none;
+            padding: 18px;
             border-radius: 12px;
+            font-weight: 600;
             border: 1px solid #333;
-            transition: all var(--transition-speed) ease-in-out;
-            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        /* Efekt při najetí / doteku */
+        .link-btn:hover, .link-btn:active {
+            transform: scale(1.08); /* Zvětšení, co jsi chtěl */
+            background: var(--accent);
+            color: #000;
+            border-color: var(--accent);
+            box-shadow: 0 5px 20px rgba(0, 255, 204, 0.4);
+        }
+
+        /* --- STATUS BAR ZE SCREENU --- */
+        .status-bar {
+            margin-top: 40px;
+            background: #000;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85rem;
+            border-left: 4px solid var(--accent);
+            text-align: left;
             position: relative;
             overflow: hidden;
         }
 
-        /* EFEKT PŘI NAJETÍ NA KARTU */
-        .card:hover {
-            transform: translateY(-10px) scale(1.02);
-            border-color: var(--accent-color);
-            box-shadow: 0 10px 30px rgba(0, 255, 204, 0.2);
-            background: #252525;
-        }
-
-        .card h3 {
-            margin-top: 0;
-            color: var(--accent-color);
-            transition: color var(--transition-speed);
-        }
-
-        .card:hover h3 {
-            color: #fff;
-        }
-
-        /* HLAVNÍ TLAČÍTKO - MAGICKÁ PROMĚNA */
-        .main-btn {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 12px 30px;
-            background-color: transparent;
-            color: var(--accent-color);
-            border: 2px solid var(--accent-color);
-            border-radius: 50px;
-            font-weight: bold;
-            text-decoration: none;
-            text-transform: uppercase;
-            transition: all var(--transition-speed) cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-
-        /* Tady se to zvětší a změní barvu, jak jsi chtěl */
-        .main-btn:hover {
-            background-color: var(--accent-color);
-            color: var(--bg-dark);
-            transform: scale(1.15); /* Zvětšení */
-            box-shadow: 0 0 20px var(--accent-color);
-        }
-
-        .main-btn:active {
-            transform: scale(0.95);
-        }
-
-        /* --- FORKNO/FUNKČNÍ PRVKY --- */
-        .status-bar {
-            margin-top: 50px;
-            background: #000;
-            padding: 15px;
-            border-radius: 8px;
-            font-family: 'Courier New', Courier, monospace;
-            border-left: 5px solid var(--accent-color);
-        }
-
-        .typing-effect {
-            border-right: 2px solid var(--accent-color);
+        .typing {
             white-space: nowrap;
             overflow: hidden;
             width: 0;
-            animation: typing 3s steps(40, end) forwards, blink 0.8s infinite;
+            animation: type 2s steps(40, end) forwards;
         }
 
-        @keyframes typing {
+        @keyframes type {
             from { width: 0 }
             to { width: 100% }
         }
 
+        .cursor {
+            display: inline-block;
+            width: 8px;
+            height: 15px;
+            background: var(--accent);
+            animation: blink 0.8s infinite;
+            vertical-align: middle;
+            margin-left: 5px;
+        }
+
         @keyframes blink {
-            50% { border-color: transparent }
+            50% { opacity: 0 }
         }
 
-        /* --- FOOTER --- */
-        footer {
-            text-align: center;
-            padding: 40px;
-            margin-top: 60px;
-            font-size: 0.9rem;
-            color: var(--secondary-color);
-        }
-
-        /* RESPONSIVITA PRO MOBILY (Když už na nich hraješ to fonko) */
-        @media (max-width: 600px) {
-            h1 { font-size: 1.8rem; }
-            .card:hover { transform: scale(1.05); } /* Na mobilu radši míň pohybu */
-        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <header>
-        <h1>Liga Mistrů v Designu</h1>
-        <p>Funkčnost starý školy, interakce budoucnosti.</p>
-    </header>
+<div class="nfc-card">
+    <div style="display: flex; justify-content: center;">
+        <div class="profile-img" style="background: #222; display: flex; align-items: center; justify-content: center; font-size: 3rem;">👤</div>
+    </div>
 
-    <div class="grid">
-        <div class="card">
-            <h3>Plynulost</h3>
-            <p>Najedete na mě a já se pohnu. Žádný zbytečný skripty, jen čistý CSS výkon.</p>
-            <a href="#" class="main-btn">Zkus mě</a>
-        </div>
+    <h1>Tvoje Jméno</h1>
+    <div class="job-title">Fullstack Developer & Visionary</div>
 
-        <div class="card">
-            <h3>Výkon</h3>
-            <p>I když to vypadá moderně, pořád to běhá na čemkoliv. Od starýho kompu po tvůj mobil.</p>
-            <a href="#" class="main-btn">Testovat</a>
-        </div>
-
-        <div class="card">
-            <h3>Barvy</h3>
-            <p>Decentní tmavý režim šetří tvoje oči, zatímco neonový akcenty navádí tvůj pohled.</p>
-            <a href="#" class="main-btn">Změnit</a>
-        </div>
+    <div class="links">
+        <a href="tel:+420123456789" class="link-btn">📞 Zavolat</a>
+        <a href="mailto:tvuj@email.cz" class="link-btn">✉️ Poslat Email</a>
+        <a href="#" class="link-btn">🔗 LinkedIn Profil</a>
+        <a href="#" class="link-btn">📸 Instagram</a>
+        <a href="#" class="link-btn" style="border-style: dashed;">💾 Uložit do kontaktů</a>
     </div>
 
     <div class="status-bar">
-        <div class="typing-effect">> Systém nahrán... Všechno šlape na 100%... Žádný lagy.</div>
+        <div class="typing">> Systém nahrán... Všechno šlape na 100%... Žádný lagy.<span class="cursor"></span></div>
     </div>
 </div>
-
-<footer>
-    &copy; 2024 - Vytvořeno s respektem k 600 řádkům (i když jsme efektivnější)
-</footer>
-
-<script>
-    // Tady můžeme přidat pár drobností, aby se neřeklo
-    document.querySelectorAll('.card').forEach(item => {
-        item.addEventListener('mousedown', () => {
-            console.log('Kámo, kliknul jsi na kartu! Funkčnost potvrzena.');
-        });
-    });
-</script>
 
 </body>
 </html>
