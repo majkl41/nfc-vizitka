@@ -3,30 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NFC Digital Identity | Elite v4.7 Neon Live</title>
+    <title>NFC Digital Identity | Elite v4.8 Brand Pulse</title>
     <!-- 
-        NFC BUSINESS CARD - ELITE NEON LIVE v4.7
+        NFC BUSINESS CARD - ELITE BRAND PULSE v4.8
         Vlastnosti:
-        - 2x2 Grid sociálních sítí (2 nahoru, 2 dolů)
-        - Full-color neon design (pryč s bílou)
-        - Floating & Pulsing animace
-        - Dynamické barevné přechody
+        - Kostky sociálních sítí s originálními barvami značek
+        - Animovaný gradientní border karty
+        - Dynamické barevné efekty (Neon & Glass)
+        - Opravený systém recenzí a scrollování
     -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono&display=swap');
 
         :root {
-            --bg: #020202;
-            --surface: rgba(15, 15, 15, 0.8);
+            --bg: #010101;
+            --surface: rgba(10, 10, 10, 0.85);
             --accent: #00ffcc;
             --accent-secondary: #bc13fe;
-            --accent-glow: rgba(0, 255, 204, 0.3);
             --text-main: #ffffff;
-            --text-dim: #bbbbbb;
-            --border: rgba(255, 255, 255, 0.1);
+            --text-dim: #999999;
+            --border: rgba(255, 255, 255, 0.08);
             --radius-card: 32px;
             --radius-btn: 18px;
             --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            
+            /* Brand Colors */
+            --ig: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+            --fb: #1877F2;
+            --li: #0077b5;
+            --web: linear-gradient(135deg, #00ffcc, #0066ff);
         }
 
         * {
@@ -34,22 +39,20 @@
             -webkit-tap-highlight-color: transparent;
         }
 
+        /* --- ANIMACE --- */
+        @keyframes rotateBorder {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
         @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-            100% { transform: translateY(0px); }
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-12px); }
         }
 
-        @keyframes bgMove {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        @keyframes pulseGlow {
-            0% { box-shadow: 0 0 10px var(--accent-glow); }
-            50% { box-shadow: 0 0 30px var(--accent-glow), 0 0 50px rgba(188, 19, 254, 0.2); }
-            100% { box-shadow: 0 0 10px var(--accent-glow); }
+        @keyframes bgPulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.1); }
         }
 
         body {
@@ -60,64 +63,69 @@
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            padding: 24px;
+            padding: 20px;
             overflow-x: hidden;
         }
 
-        /* --- ANIMOVANÉ POZADÍ --- */
-        .bg-mesh {
+        /* --- POZADÍ --- */
+        .bg-container {
             position: fixed;
             inset: 0;
             z-index: -1;
-            background: linear-gradient(-45deg, #050505, #0a1110, #110a11, #050505);
-            background-size: 400% 400%;
-            animation: bgMove 15s ease infinite;
-        }
-
-        .glow-spot {
-            position: absolute;
-            width: 300px; height: 300px;
-            border-radius: 50%;
-            background: var(--accent);
-            filter: blur(120px);
-            opacity: 0.15;
-            pointer-events: none;
-        }
-
-        /* --- KARTA --- */
-        .card-wrapper {
-            width: 100%;
-            max-width: 360px;
-            perspective: 2000px;
-            animation: float 6s ease-in-out infinite;
-        }
-
-        .card {
-            background: var(--surface);
-            backdrop-filter: blur(30px) saturate(200%);
-            -webkit-backdrop-filter: blur(30px) saturate(200%);
-            border: 1px solid var(--border);
-            border-radius: var(--radius-card);
-            padding: 45px 30px;
-            box-shadow: 0 50px 100px rgba(0,0,0,0.8);
-            transform-style: preserve-3d;
-            text-align: center;
-            will-change: transform;
-            position: relative;
             overflow: hidden;
         }
 
-        /* Světelný efekt přes kartu */
-        .card::after {
-            content: '';
+        .blob {
             position: absolute;
-            top: -50%; left: -50%;
-            width: 200%; height: 200%;
-            background: radial-gradient(circle at center, rgba(255,255,255,0.05) 0%, transparent 70%);
-            pointer-events: none;
+            width: 500px; height: 500px;
+            border-radius: 50%;
+            filter: blur(80px);
+            animation: bgPulse 8s infinite ease-in-out;
         }
 
-        /* Header / Avatar */
+        /* --- KARTA --- */
+        .card-container {
+            width: 100%;
+            max-width: 380px;
+            position: relative;
+            animation: float 6s infinite ease-in-out;
+            perspective: 1500px;
+        }
+
+        /* Animovaný okraj karty */
+        .card-border {
+            position: absolute;
+            inset: -2px;
+            background: linear-gradient(var(--accent), var(--accent-secondary), var(--accent));
+            border-radius: calc(var(--radius-card) + 2px);
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .card-border::before {
+            content: '';
+            position: absolute;
+            width: 200%; height: 200%;
+            top: -50%; left: -50%;
+            background: conic-gradient(transparent, var(--accent), transparent, var(--accent-secondary), transparent);
+            animation: rotateBorder 4s linear infinite;
+        }
+
+        .card {
+            position: relative;
+            z-index: 1;
+            background: var(--surface);
+            backdrop-filter: blur(40px) saturate(200%);
+            -webkit-backdrop-filter: blur(40px) saturate(200%);
+            border-radius: var(--radius-card);
+            padding: 40px 30px;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+            transform-style: preserve-3d;
+            text-align: center;
+            transition: transform 0.1s ease-out;
+        }
+
+        /* Profile */
         .profile {
             display: flex;
             flex-direction: column;
@@ -125,152 +133,122 @@
             margin-bottom: 30px;
         }
 
-        .avatar-container {
+        .avatar-box {
             width: 100px; height: 100px;
-            margin-bottom: 20px;
-            position: relative;
-            transform: translateZ(50px);
-            animation: pulseGlow 4s infinite;
             border-radius: 50%;
-        }
-
-        .avatar {
-            width: 100%; height: 100%;
-            border-radius: 50%;
-            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
             padding: 3px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
+            margin-bottom: 20px;
+            box-shadow: 0 0 30px rgba(0, 255, 204, 0.3);
         }
 
         .avatar-inner {
             width: 100%; height: 100%;
-            background: #000;
+            background: #050505;
             border-radius: 50%;
             display: flex; align-items: center; justify-content: center;
         }
 
-        .avatar-inner svg { width: 45%; fill: var(--accent); filter: drop-shadow(0 0 8px var(--accent)); }
+        .avatar-inner svg { width: 45%; fill: #fff; }
 
         .header h1 {
             font-size: 1.8rem;
             font-weight: 800;
             letter-spacing: -1px;
             margin-bottom: 6px;
-            background: linear-gradient(to right, #fff, var(--accent));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
         }
 
         .header p {
-            color: var(--accent-secondary);
+            color: var(--accent);
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.65rem;
             text-transform: uppercase;
             letter-spacing: 4px;
-            font-weight: 700;
+            opacity: 0.8;
         }
 
-        /* --- SOCIÁLNÍ SÍTĚ (2x2 KOSTKY) --- */
+        /* --- BRANDED GRID (2x2) --- */
         .social-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr; /* 2 sloupce */
-            grid-template-rows: 1fr 1fr;    /* 2 řady */
+            grid-template-columns: 1fr 1fr;
             gap: 15px;
-            margin-bottom: 30px;
-            transform: translateZ(30px);
+            margin-bottom: 25px;
         }
 
         .social-box {
             aspect-ratio: 1/1;
-            background: rgba(255,255,255,0.03);
+            background: rgba(255, 255, 255, 0.03);
             border: 1px solid var(--border);
             border-radius: 20px;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: var(--transition);
-            color: var(--text-dim);
+            color: #fff;
             text-decoration: none;
             position: relative;
             overflow: hidden;
         }
 
-        .social-box::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
-            opacity: 0;
-            transition: 0.4s;
-            z-index: 0;
-        }
+        .social-box svg { width: 30px; height: 30px; fill: #fff; transition: 0.3s; z-index: 2; }
 
-        .social-box:hover {
-            border-color: transparent;
-            transform: translateY(-5px) scale(1.05);
-            color: #fff;
-            box-shadow: 0 10px 25px rgba(0, 255, 204, 0.2);
-        }
+        /* Konkrétní barvy značek */
+        .social-box.ig:hover { background: var(--ig); box-shadow: 0 10px 25px rgba(220, 39, 67, 0.4); border-color: transparent; }
+        .social-box.fb:hover { background: var(--fb); box-shadow: 0 10px 25px rgba(24, 119, 242, 0.4); border-color: transparent; }
+        .social-box.li:hover { background: var(--li); box-shadow: 0 10px 25px rgba(0, 119, 181, 0.4); border-color: transparent; }
+        .social-box.web:hover { background: var(--web); box-shadow: 0 10px 25px rgba(0, 255, 204, 0.4); border-color: transparent; }
 
-        .social-box:hover::before { opacity: 0.15; }
+        .social-box:hover { transform: translateY(-8px) rotate(2deg); }
+        .social-box:hover svg { transform: scale(1.15); }
 
-        .social-box svg { width: 28px; height: 28px; fill: currentColor; z-index: 1; }
-
-        /* --- AKCE (NEON GRADIENT) --- */
+        /* --- AKCE --- */
         .main-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 25px;
         }
 
-        .btn-action {
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .btn-call {
+            background: linear-gradient(90deg, var(--accent), #00ccff);
+            color: #000;
             padding: 16px;
             border-radius: var(--radius-btn);
-            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
-            color: #fff;
             text-decoration: none;
             font-weight: 800;
-            font-size: 0.9rem;
+            font-size: 1rem;
             transition: var(--transition);
-            border: none;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            box-shadow: 0 10px 20px rgba(0, 255, 204, 0.2);
         }
 
-        .btn-action:hover {
-            filter: brightness(1.2);
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 10px 30px var(--accent-glow);
-        }
+        .btn-call:hover { transform: scale(1.03); filter: brightness(1.1); }
 
-        /* --- TERMINÁL --- */
+        /* Terminal */
         .console {
-            background: rgba(0,0,0,0.6);
+            background: rgba(0, 0, 0, 0.6);
             border-radius: 20px;
             padding: 18px;
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.7rem;
             text-align: left;
-            margin-bottom: 30px;
-            border: 1px solid rgba(0, 255, 204, 0.2);
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
             color: var(--accent);
             line-height: 1.6;
         }
 
         /* --- FOOTER --- */
-        .footer-actions {
+        .footer-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 15px;
         }
 
         .btn-sec {
-            background: rgba(255,255,255,0.02);
+            background: rgba(255, 255, 255, 0.05);
             border: 1px solid var(--border);
-            color: var(--accent);
+            color: #fff;
             padding: 14px;
             border-radius: 16px;
             font-size: 0.7rem;
@@ -281,109 +259,91 @@
             transition: var(--transition);
         }
 
-        .btn-sec:hover {
-            background: var(--accent-soft);
-            border-color: var(--accent);
-            color: #fff;
-        }
+        .btn-sec:hover { background: var(--accent-secondary); border-color: transparent; color: #fff; }
 
         /* --- MODAL (RECENZE) --- */
         #modal {
             position: fixed; inset: 0;
-            background: rgba(0,0,0,0.92);
+            background: rgba(0, 0, 0, 0.95);
             backdrop-filter: blur(25px);
             display: none;
             align-items: flex-start;
             justify-content: center;
-            z-index: 1000; 
-            padding: 40px 24px;
+            z-index: 1000;
+            padding: 40px 20px;
             overflow-y: auto;
         }
 
         .modal-body {
             background: #080808;
-            border: 1px solid var(--accent-glow);
-            width: 100%; max-width: 360px;
+            border: 1px solid var(--border);
+            width: 100%; max-width: 400px;
             border-radius: 30px;
             padding: 30px;
             margin: auto;
-            box-shadow: 0 0 50px rgba(0, 255, 204, 0.1);
+            position: relative;
         }
 
-        .rating-stats {
-            background: #000;
+        .rating-overview {
+            background: #111;
             padding: 20px;
             border-radius: 20px;
             margin: 20px 0;
-            border: 1px solid #111;
         }
 
-        .stat-row {
-            display: flex; align-items: center; gap: 12px; margin-bottom: 8px;
-            font-size: 0.75rem;
-        }
+        .bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 0.75rem; }
+        .bar-full { flex: 1; height: 6px; background: #222; border-radius: 3px; overflow: hidden; }
+        .bar-inner { height: 100%; background: var(--accent); transition: width 1s; }
 
-        .bar-bg { flex: 1; height: 6px; background: #111; border-radius: 3px; overflow: hidden; }
-        .bar-fill { height: 100%; background: linear-gradient(to right, var(--accent), var(--accent-secondary)); border-radius: 3px; transition: width 1s; }
-
-        .star-picker {
-            display: flex; gap: 10px; justify-content: center;
-            margin: 20px 0; font-size: 1.8rem; color: #1a1a1a;
-        }
-        .star-picker span { cursor: pointer; transition: 0.3s; }
-        .star-picker span.active { color: #00ffcc; text-shadow: 0 0 15px rgba(0,255,204,0.5); }
-
-        .rev-scroller {
+        .rev-list {
             max-height: 250px; overflow-y: auto;
             margin-bottom: 25px; text-align: left;
             padding-right: 5px;
         }
 
-        .rev-scroller::-webkit-scrollbar { width: 3px; }
-        .rev-scroller::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
-
         .rev-card {
-            padding: 15px; border-bottom: 1px solid #111;
-            font-size: 0.85rem; color: var(--text-dim);
-            background: rgba(255,255,255,0.01);
-            border-radius: 12px;
-            margin-bottom: 8px;
+            background: rgba(255,255,255,0.02);
+            padding: 15px; border-radius: 16px; margin-bottom: 10px;
+            font-size: 0.85rem; color: #ccc;
         }
 
+        .star-box {
+            display: flex; gap: 8px; justify-content: center;
+            margin: 20px 0; font-size: 1.8rem; color: #222;
+        }
+        .star-box span { cursor: pointer; transition: 0.2s; }
+        .star-box span.active { color: #ffcc00; text-shadow: 0 0 10px rgba(255,204,0,0.4); }
+
         #toast {
-            position: fixed; bottom: -80px; left: 50%;
-            transform: translateX(-50%);
-            background: linear-gradient(135deg, var(--accent), var(--accent-secondary));
-            color: #fff;
+            position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%);
+            background: var(--accent); color: #000;
             padding: 16px 40px; border-radius: 50px;
-            font-weight: 800; font-size: 0.9rem;
-            transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275); 
+            font-weight: 800; transition: 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 2000;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
         #toast.visible { bottom: 40px; }
 
         @media (max-width: 400px) {
-            .card { padding: 40px 20px; }
+            .card { padding: 35px 20px; }
             .header h1 { font-size: 1.5rem; }
         }
     </style>
 </head>
 <body>
 
-    <div class="bg-mesh"></div>
-    <div class="glow-spot" style="top: -10%; left: -10%;"></div>
-    <div class="glow-spot" style="bottom: -10%; right: -10%; background: var(--accent-secondary);"></div>
+    <div class="bg-container">
+        <div class="blob" style="top: -10%; left: -10%; background: var(--accent);"></div>
+        <div class="blob" style="bottom: -10%; right: -10%; background: var(--accent-secondary);"></div>
+    </div>
 
-    <div class="card-wrapper">
+    <div class="card-container">
+        <div class="card-border"></div>
         <div class="card" id="tiltCard">
             
             <div class="profile">
-                <div class="avatar-container">
-                    <div class="avatar">
-                        <div class="avatar-inner">
-                            <svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
-                        </div>
+                <div class="avatar-box">
+                    <div class="avatar-inner">
+                        <svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
                     </div>
                 </div>
                 <div class="header">
@@ -392,34 +352,33 @@
                 </div>
             </div>
 
-            <!-- SOCIÁLNÍ SÍTĚ (2x2 KOSTKY) -->
+            <!-- BRANDED GRID (2x2) -->
             <div class="social-grid">
-                <a href="https://instagram.com" class="social-box" title="Instagram">
+                <a href="https://instagram.com" class="social-box ig">
                     <svg viewBox="0 0 24 24"><path d="M7.8,2H16.2C19.4,2 22,4.6 22,7.8V16.2A5.8,5.8 0 0,1 16.2,22H7.8C4.6,22 2,19.4 2,16.2V7.8A5.8,5.8 0 0,1 7.8,2M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9M18,5.75A1.25,1.25 0 0,0 16.75,7A1.25,1.25 0 0,0 18,8.25A1.25,1.25 0 0,0 19.25,7A1.25,1.25 0 0,0 18,5.75Z"/></svg>
                 </a>
-                <a href="https://facebook.com" class="social-box" title="Facebook">
+                <a href="https://facebook.com" class="social-box fb">
                     <svg viewBox="0 0 24 24"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96A10 10 0 0 0 22 12.06C22 6.53 17.5 2.04 12 2.04Z"/></svg>
                 </a>
-                <a href="https://linkedin.com" class="social-box" title="LinkedIn">
+                <a href="https://linkedin.com" class="social-box li">
                     <svg viewBox="0 0 24 24"><path d="M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3H19M18.5,18.5V13.2A3.26,3.26 0 0,0 15.24,9.94C13.93,9.94 13,10.63 12.46,11.47V10.11H9.09V18.5H12.46V12.93C12.46,11.97 13.05,11.27 14.18,11.27C15.31,11.27 15.13,12.23 15.13,13.29V18.5H18.5M6.88,8.56A1.68,1.68 0 0,0 8.56,6.88C8.56,5.95 7.81,5.19 6.88,5.19A1.69,1.69 0 0,0 5.19,6.88C5.19,7.81 5.95,8.56 6.88,8.56M5.19,18.5H8.56V10.11H5.19V18.5Z"/></svg>
                 </a>
-                <a href="#" class="social-box" title="Website">
+                <a href="#" class="social-box web">
                     <svg viewBox="0 0 24 24"><path d="M16.36,14C16.44,13.34 16.5,12.68 16.5,12C16.5,11.32 16.44,10.66 16.36,10H19.74C19.9,10.64 20,11.31 20,12C20,12.69 19.9,13.36 19.74,14M14.59,19.56C15.19,18.45 15.65,17.25 15.97,16H18.92C17.96,17.65 16.43,18.93 14.59,19.56M14.34,14H9.66C9.57,13.34 9.5,12.68 9.5,12C9.5,11.32 9.57,10.66 9.66,10H14.34C14.43,10.66 14.5,11.32 14.5,12C14.5,12.68 14.43,13.34 14.34,14M12,19.96C11.17,18.76 10.5,17.43 10.09,16H13.91C13.5,17.43 12.83,18.76 12,19.96M8,14H4.26C4.1,13.36 4,12.69 4,12C4,11.31 4.1,10.64 4.26,10H8C7.91,10.66 7.85,11.32 7.85,12C7.85,12.68 7.91,13.34 8,14M14.59,4.44C16.43,5.07 17.96,6.35 18.92,8H15.97C15.65,6.75 15.19,5.55 14.59,4.44M13.91,8H10.09C10.5,6.57 11.17,5.24 12,4.04C12.83,5.24 13.5,6.57 13.91,8M9.41,4.44C8.81,5.55 8.35,6.75 8.03,8H5.08C6.04,6.35 7.57,5.07 9.41,4.44M4.26,8H8C8.09,8.66 8.15,9.32 8.15,10H4.26C4.1,9.36 4,8.69 4,8M5.08,16H8.03C8.35,17.25 8.81,18.45 9.41,19.56C7.57,18.93 6.04,17.65 5.08,16Z"/></svg>
                 </a>
             </div>
 
             <div class="main-actions">
-                <a href="tel:+420777123456" class="btn-action">Zavolat</a>
-                <a href="mailto:hello@karelnovak.pro" class="btn-action">E-mail</a>
+                <a href="tel:+420777123456" class="btn-call">Zavolat</a>
             </div>
 
             <div class="console">
-                <div><span style="color:var(--accent)">●</span> SYSTÉM AKTIVNÍ</div>
-                <div style="opacity: 0.5;">> Protokol Elite v4.7 online</div>
-                <div style="opacity: 0.5;">> Ready to share identity...</div>
+                <div><span style="color:var(--accent)">●</span> CONNECTED</div>
+                <div style="opacity: 0.5;">> Elite Protocol v4.8 active</div>
+                <div style="opacity: 0.5;">> Ready for NFC transfer...</div>
             </div>
 
-            <div class="footer-actions">
+            <div class="footer-grid">
                 <button class="btn-sec" onclick="openModal()">Recenze ⭐</button>
                 <button class="btn-sec" onclick="saveContact()">Uložit 👤</button>
             </div>
@@ -427,34 +386,31 @@
         </div>
     </div>
 
-    <!-- MODAL (RECENZE) -->
+    <!-- MODAL -->
     <div id="modal" onclick="closeModal()">
         <div class="modal-body" onclick="event.stopPropagation()">
-            <h3 style="text-align: left; color: var(--accent);">Hodnocení a Recenze</h3>
+            <h3 style="text-align: left; color: var(--accent);">Reference</h3>
             
-            <div class="rating-stats" id="statsCont">
-                <!-- Dynamicky plněno -->
-            </div>
+            <div class="rating-overview" id="statsCont"></div>
+            <div class="rev-list" id="revContainer"></div>
 
-            <div class="rev-scroller" id="revContainer"></div>
-
-            <div style="text-align: left; border-top: 1px solid #222; padding-top: 20px;">
-                <p style="font-size: 0.75rem; color: #555; margin-bottom: 10px;">Přidat hodnocení:</p>
-                <div class="star-picker" id="starPicker">
+            <div style="text-align: left; border-top: 1px solid #222; padding-top: 15px;">
+                <p style="font-size: 0.75rem; color: #555;">Tvé hodnocení:</p>
+                <div class="star-box" id="starPicker">
                     <span data-v="1">★</span><span data-v="2">★</span><span data-v="3">★</span><span data-v="4">★</span><span data-v="5" class="active">★</span>
                 </div>
-                <input type="text" id="revIn" placeholder="Napiš vzkaz..." maxlength="60" style="width:100%; background:#111; border:1px solid #222; color:#fff; padding:15px; border-radius:15px; margin-bottom:15px; font-family: inherit; outline: none;">
-                <button class="btn-action" style="width:100%;" onclick="addReview()">Odeslat recenzi</button>
+                <input type="text" id="revIn" placeholder="Napiš vzkaz..." maxlength="50" style="width:100%; background:#111; border:1px solid #222; color:#fff; padding:15px; border-radius:15px; margin-bottom:15px; font-family: inherit; outline: none;">
+                <button class="btn-call" style="width:100%;" onclick="addReview()">Odeslat</button>
             </div>
             
-            <button onclick="closeModal()" style="background: none; border: none; color: #333; font-size: 0.75rem; margin-top: 20px; cursor: pointer; text-transform: uppercase; letter-spacing: 2px; width: 100%;">Zavřít</button>
+            <button onclick="closeModal()" style="background: none; border: none; color: #444; font-size: 0.7rem; margin-top: 20px; cursor: pointer; text-transform: uppercase;">Zavřít</button>
         </div>
     </div>
 
     <div id="toast">Operace úspěšná</div>
 
     <script>
-        // --- 3D TILT (JEMNĚJŠÍ) ---
+        // --- 3D TILT ---
         const card = document.getElementById('tiltCard');
         document.addEventListener('mousemove', (e) => {
             if (window.innerWidth < 1000) return;
@@ -463,15 +419,7 @@
             card.style.transform = `rotateY(${-x}deg) rotateX(${y}deg)`;
         });
 
-        // Mobile Gyro
-        window.addEventListener('deviceorientation', (e) => {
-            if (window.innerWidth > 1000) return;
-            const beta = Math.min(Math.max(e.beta / 15, -5), 5); 
-            const gamma = Math.min(Math.max(e.gamma / 15, -5), 5);
-            card.style.transform = `rotateX(${beta}deg) rotateY(${gamma}deg)`;
-        });
-
-        // --- STAR PICKER ---
+        // --- STARS ---
         let userRating = 5;
         const stars = document.querySelectorAll('#starPicker span');
         stars.forEach(s => {
@@ -481,7 +429,7 @@
             };
         });
 
-        // --- REVIEWS LOGIC ---
+        // --- REVIEWS ---
         function openModal() {
             document.getElementById('modal').style.display = 'flex';
             document.body.style.overflow = 'hidden';
@@ -495,30 +443,24 @@
         function addReview() {
             const input = document.getElementById('revIn');
             if(!input.value.trim()) return;
-            const reviews = JSON.parse(localStorage.getItem('nfc_v7_revs') || '[]');
-            reviews.push({ 
-                text: input.value, 
-                rating: userRating,
-                time: new Date().toLocaleDateString()
-            });
-            localStorage.setItem('nfc_v7_revs', JSON.stringify(reviews));
+            const reviews = JSON.parse(localStorage.getItem('nfc_v8_revs') || '[]');
+            reviews.push({ text: input.value, rating: userRating, date: new Date().toLocaleDateString() });
+            localStorage.setItem('nfc_v8_revs', JSON.stringify(reviews));
             input.value = '';
             renderReviews();
-            showToast("Recenze uložena! 🚀");
+            showToast("Díky za recenzi! ❤️");
         }
 
         function renderReviews() {
             const container = document.getElementById('revContainer');
             const statsCont = document.getElementById('statsCont');
-            const reviews = JSON.parse(localStorage.getItem('nfc_v7_revs') || '[]');
+            const reviews = JSON.parse(localStorage.getItem('nfc_v8_revs') || '[]');
             
             if(reviews.length === 0) {
-                container.innerHTML = '<p style="text-align:center; color:#333; margin:20px 0; font-size:0.85rem;">Zatím žádná hodnocení.</p>';
-                statsCont.innerHTML = '<p style="color:#222; font-size:0.75rem; text-align:center;">Prázdná databáze</p>';
+                container.innerHTML = '<p style="text-align:center; color:#333; margin:20px 0;">Zatím žádná data.</p>';
                 return;
             }
 
-            // Stats Calculation
             const counts = {5:0, 4:0, 3:0, 2:0, 1:0};
             reviews.forEach(r => counts[r.rating]++);
             const total = reviews.length;
@@ -527,23 +469,22 @@
             for(let i=5; i>=1; i--) {
                 const pct = (counts[i] / total) * 100;
                 statsHtml += `
-                    <div class="stat-row">
-                        <span style="width:10px; color:#555;">${i}</span>
-                        <div class="bar-bg"><div class="bar-fill" style="width:${pct}%"></div></div>
-                        <span style="width:30px; text-align:right; color:#333">${Math.round(pct)}%</span>
+                    <div class="bar-row">
+                        <span style="width:10px">${i}</span>
+                        <div class="bar-full"><div class="bar-inner" style="width:${pct}%"></div></div>
+                        <span style="width:30px; text-align:right;">${Math.round(pct)}%</span>
                     </div>
                 `;
             }
             statsCont.innerHTML = statsHtml;
 
-            // List Render
             container.innerHTML = reviews.reverse().map(r => `
                 <div class="rev-card">
-                    <div style="display:flex; justify-content:space-between; margin-bottom:6px;">
-                        <span style="color:var(--accent); font-size:0.75rem;">${'★'.repeat(r.rating)}</span>
-                        <span style="font-size:0.65rem; color:#444;">${r.time}</span>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:5px;">
+                        <span style="color:gold;">${'★'.repeat(r.rating)}</span>
+                        <small style="color:#444;">${r.date}</small>
                     </div>
-                    <div style="line-height:1.4;">${r.text}</div>
+                    ${r.text}
                 </div>
             `).join('');
         }
