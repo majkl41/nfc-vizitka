@@ -2,510 +2,402 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Karel Novák // Digital Identity</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Karel Novák // Precision Identity</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;800&family=JetBrains+Mono:wght@500;800&display=swap');
 
         :root {
-            /* Core Palette */
-            --bg-color: #080808;
-            --card-bg: rgba(18, 18, 18, 0.75);
-            --border-color: rgba(255, 255, 255, 0.1);
+            --bg: #ffffff;
+            --card-bg: #ffffff;
+            --card-hover: #fbfbfb;
+            --tag-bg: #f2f2f7; /* Apple Grey pro vnitřní bloky */
+            --border: rgba(0, 0, 0, 0.12); /* Zvýrazněný border */
+            --text-main: #1d1d1f;
+            --text-dim: #86868b;
             
-            /* Accent Palette */
-            --clr-cyan: #00ffcc;
-            --clr-purple: #bc13fe;
-            --clr-main: var(--clr-cyan);
+            /* Brand Colors */
+            --clr-ig: #E1306C;
+            --clr-fb: #1877F2;
+            --clr-li: #0077B5;
+            --clr-web: #00d4aa;
+            --clr-apple-blue: #0071e3;
             
-            /* Brand Identity */
-            --brand-ig: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
-            --brand-fb: #1877F2;
-            --brand-li: #0077b5;
-            --brand-web: linear-gradient(135deg, #00ffcc, #0066ff);
-
-            /* Spacing & Radii */
-            --radius-lg: 28px;
-            --radius-md: 16px;
+            --radius-lg: 32px;
+            --radius-md: 20px;
+            --radius-sm: 14px;
             --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
         }
 
-        /* --- Global Reset --- */
         * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+            margin: 0; padding: 0; box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
         }
 
         body {
-            background-color: var(--bg-color);
-            color: #fff;
+            background-color: var(--bg);
+            color: var(--text-main);
             font-family: 'Plus Jakarta Sans', sans-serif;
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: flex-start;
             min-height: 100vh;
-            padding: 20px;
+            padding: 40px 20px;
             overflow-x: hidden;
-            line-height: 1.5;
         }
 
-        /* --- Background Elements --- */
-        .bg-mesh {
-            position: fixed;
-            inset: 0;
-            z-index: -1;
-            overflow: hidden;
-        }
-
-        .blob {
-            position: absolute;
-            width: 40vw;
-            height: 40vw;
-            border-radius: 50%;
-            filter: blur(100px);
-            opacity: 0.2;
+        /* --- BACKGROUND --- */
+        .noise {
+            position: fixed; inset: 0; z-index: -1;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            opacity: 0.02;
             pointer-events: none;
         }
 
-        /* --- Main Layout --- */
-        .app-container {
+        /* --- CONTAINER --- */
+        .container {
             width: 100%;
             max-width: 380px;
-            perspective: 1200px;
-            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
         }
 
-        .card-frame {
-            position: relative;
+        .card {
             background: var(--card-bg);
-            backdrop-filter: blur(25px) saturate(160%);
-            -webkit-backdrop-filter: blur(25px) saturate(160%);
-            border: 1px solid var(--border-color);
+            border: 1px solid var(--border);
             border-radius: var(--radius-lg);
-            padding: 40px 24px;
-            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.6);
-            transform-style: preserve-3d;
-            will-change: transform;
-            transition: transform 0.15s ease-out;
+            padding: 32px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.05);
+            transition: var(--ease);
         }
 
-        .card-frame::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            border-radius: var(--radius-lg);
-            padding: 1px;
-            background: linear-gradient(135deg, var(--clr-cyan), var(--clr-purple));
-            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-            -webkit-mask-composite: xor;
-            mask-composite: exclude;
-            opacity: 0.2;
-            pointer-events: none;
-        }
-
-        .profile-header {
+        /* Profile Section */
+        .profile {
             text-align: center;
-            margin-bottom: 32px;
+            margin-bottom: 24px;
         }
 
         .avatar-wrap {
-            width: 90px;
-            height: 90px;
-            margin: 0 auto 20px;
+            width: 90px; height: 90px;
+            margin: 0 auto 24px;
             position: relative;
-            transform: translateZ(30px);
         }
 
-        .avatar-main {
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #121212, #222);
+        .avatar-inner {
+            width: 100%; height: 100%;
+            background: #111111;
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 1px solid var(--border-color);
-            box-shadow: 0 10px 30px rgba(0, 255, 204, 0.1);
+            display: flex; align-items: center; justify-content: center;
+            border: 2px solid #000;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
         }
 
-        .avatar-main svg { width: 45%; fill: var(--clr-cyan); filter: drop-shadow(0 0 5px var(--clr-cyan)); }
+        .avatar-inner svg { width: 45%; fill: #ffffff; }
 
-        .header-info h1 {
-            font-size: 1.75rem;
+        .status-badge {
+            position: absolute;
+            bottom: 4px; right: 4px;
+            width: 18px; height: 18px;
+            background: #34c759;
+            border: 3px solid #fff;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .info-tag {
+            display: inline-block;
+            background: var(--tag-bg);
+            padding: 12px 24px;
+            border-radius: var(--radius-sm);
+            border: 1px solid rgba(0,0,0,0.06);
+            margin: 0 auto;
+        }
+
+        .info-tag h1 {
+            font-size: 1.6rem;
             font-weight: 800;
-            letter-spacing: -0.5px;
-            margin-bottom: 4px;
+            letter-spacing: -0.8px;
+            margin-bottom: 2px;
+            color: #000;
         }
 
-        .header-info p {
-            color: var(--clr-cyan);
-            font-family: 'JetBrains Mono', monospace;
+        .info-tag p {
+            color: var(--text-dim);
             font-size: 0.7rem;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 3px;
+            letter-spacing: 2px;
         }
 
-        .grid-socials {
+        /* --- SOCIAL GRID 2x2 --- */
+        .social-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
             gap: 16px;
-            margin-bottom: 24px;
+            margin-top: 12px;
         }
 
-        .grid-socials a {
+        .social-box {
             aspect-ratio: 1/1;
-            background: rgba(255, 255, 255, 0.03);
-            border: 1px solid var(--border-color);
+            background: #f2f2f7; /* Mírně tmavší pozadí pro viditelnost */
+            border: 1.5px solid rgba(0,0,0,0.1); /* Silnější ohraničení */
             border-radius: var(--radius-md);
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
+            text-decoration: none;
             transition: var(--ease);
             position: relative;
             overflow: hidden;
-            text-decoration: none;
+            box-shadow: inset 0 1px 2px rgba(255,255,255,0.8), 0 2px 4px rgba(0,0,0,0.02);
         }
 
-        .grid-socials a svg { width: 28px; height: 28px; fill: #fff; z-index: 2; transition: 0.3s; }
+        .social-box svg { width: 34px; height: 34px; transition: 0.4s; }
 
-        .grid-socials a:hover { transform: translateY(-6px); border-color: transparent; }
-        .grid-socials a.ig:hover { background: var(--brand-ig); box-shadow: 0 10px 20px rgba(220, 35, 102, 0.3); }
-        .grid-socials a.fb:hover { background: var(--brand-fb); box-shadow: 0 10px 20px rgba(24, 119, 242, 0.3); }
-        .grid-socials a.li:hover { background: var(--brand-li); box-shadow: 0 10px 20px rgba(0, 119, 181, 0.3); }
-        .grid-socials a.web:hover { background: var(--brand-web); box-shadow: 0 10px 20px rgba(0, 255, 204, 0.3); }
+        /* Brand Colors v základu - s vyšším kontrastem */
+        .social-box.ig svg { fill: var(--clr-ig); }
+        .social-box.fb svg { fill: var(--clr-fb); }
+        .social-box.li svg { fill: var(--clr-li); }
+        .social-box.web svg { fill: var(--clr-web); }
 
-        .btn-primary {
+        /* Hover efekty - výrazné přebití barvou */
+        .social-box:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(0,0,0,0.12);
+            border-color: rgba(0,0,0,0.2);
+        }
+
+        .social-box.ig:hover { background: var(--clr-ig); border-color: var(--clr-ig); }
+        .social-box.fb:hover { background: var(--clr-fb); border-color: var(--clr-fb); }
+        .social-box.li:hover { background: var(--clr-li); border-color: var(--clr-li); }
+        .social-box.web:hover { background: var(--clr-web); border-color: var(--clr-web); }
+
+        .social-box:hover svg { fill: #fff !important; transform: scale(1.1); }
+
+        /* --- AKCE --- */
+        .btn-call {
             width: 100%;
-            background: #fff;
-            color: #000;
-            padding: 16px;
+            background: #000;
+            color: #fff;
+            padding: 20px;
             border-radius: var(--radius-md);
             text-decoration: none;
             font-weight: 700;
             text-align: center;
-            margin-bottom: 24px;
-            transition: var(--ease);
+            margin-bottom: 20px;
             display: block;
+            transition: var(--ease);
+            border: none;
+            cursor: pointer;
         }
 
-        .btn-primary:hover {
-            background: var(--clr-cyan);
+        .btn-call:hover {
+            background: var(--clr-apple-blue);
             transform: translateY(-2px);
-            box-shadow: 0 15px 30px rgba(0, 255, 204, 0.2);
+            box-shadow: 0 15px 30px rgba(0, 113, 227, 0.2);
         }
 
-        .sys-logs {
-            background: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: var(--radius-md);
+        .sys-info {
+            background: #f5f5f7;
+            border-radius: 18px;
             padding: 14px;
             font-family: 'JetBrains Mono', monospace;
-            font-size: 0.65rem;
+            font-size: 0.6rem;
+            color: #888;
             text-align: left;
-            margin-bottom: 24px;
-            color: var(--clr-cyan);
+            border: 1px solid var(--border);
         }
 
-        .flex-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .util-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
 
         .btn-util {
-            background: transparent;
-            border: 1px solid var(--border-color);
-            color: #888;
-            padding: 12px;
-            border-radius: 12px;
-            font-size: 0.7rem;
+            background: #fff;
+            border: 1px solid var(--border);
+            color: #000;
+            padding: 14px;
+            border-radius: 14px;
+            font-size: 0.72rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
             cursor: pointer;
             transition: 0.3s;
         }
 
-        .btn-util:hover { border-color: var(--clr-purple); color: var(--clr-purple); }
+        .btn-util:hover { background: #000; color: #fff; border-color: #000; }
 
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.9);
-            backdrop-filter: blur(15px);
-            z-index: 999;
+        /* --- MODAL --- */
+        .modal {
+            position: fixed; inset: 0;
+            background: rgba(255,255,255,0.96);
+            backdrop-filter: blur(25px);
+            z-index: 1000;
             display: none;
-            align-items: flex-start;
-            justify-content: center;
-            padding: 40px 20px;
+            align-items: center; justify-content: center;
+            padding: 20px;
+        }
+
+        .modal-body {
+            background: #fff;
+            border: 1px solid var(--border);
+            width: 100%; max-width: 400px;
+            border-radius: 32px;
+            padding: 32px;
+            max-height: 85vh;
             overflow-y: auto;
-            overscroll-behavior: contain;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.1);
         }
 
-        .modal-card {
-            background: #0d0d0d;
-            border: 1px solid var(--border-color);
-            width: 100%;
-            max-width: 400px;
-            border-radius: var(--radius-lg);
-            padding: 30px;
-            margin: auto;
-        }
-
-        .stats-view {
-            background: #000;
+        .rev-item {
+            background: #f9f9fb;
             padding: 16px;
-            border-radius: var(--radius-md);
-            margin: 16px 0;
+            border-radius: 16px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
         }
 
-        .bar-wrap { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 0.7rem; }
-        .bar-empty { flex: 1; height: 4px; background: #1a1a1a; border-radius: 2px; }
-        .bar-fill { height: 100%; background: var(--clr-cyan); transition: width 1s; }
+        .rev-text { font-size: 0.9rem; color: #444; }
 
-        .reviews-container {
-            max-height: 200px;
-            overflow-y: auto;
-            margin-bottom: 20px;
-            padding-right: 5px;
+        input {
+            width: 100%; background: #f5f5f7; border: 1px solid var(--border);
+            color: #000; padding: 16px; border-radius: 14px; margin-bottom: 16px;
+            outline: none; font-family: inherit;
         }
-
-        .review-card {
-            background: rgba(255, 255, 255, 0.02);
-            padding: 12px;
-            border-radius: 12px;
-            margin-bottom: 8px;
-            font-size: 0.8rem;
-            color: #aaa;
-        }
-
-        .rating-picker {
-            display: flex; gap: 12px; justify-content: center; margin: 20px 0;
-            font-size: 1.8rem; color: #1a1a1a; cursor: pointer;
-        }
-        .rating-picker span.active { color: #ffc107; text-shadow: 0 0 15px rgba(255, 193, 7, 0.3); }
 
         #toast {
-            position: fixed; bottom: -60px; left: 50%; transform: translateX(-50%);
-            background: var(--clr-cyan); color: #000;
-            padding: 12px 30px; border-radius: 30px;
-            font-weight: 800; font-size: 0.85rem;
-            transition: 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            z-index: 1000;
+            position: fixed; bottom: -80px; left: 50%; transform: translateX(-50%);
+            background: #000; color: #fff;
+            padding: 12px 32px; border-radius: 50px;
+            font-weight: 700; font-size: 0.85rem; transition: 0.4s var(--ease); z-index: 2000;
         }
-        #toast.active { bottom: 30px; }
-
-        @media (max-width: 400px) {
-            .card-frame { padding: 32px 20px; }
-            .header-info h1 { font-size: 1.5rem; }
-        }
+        #toast.active { bottom: 40px; }
     </style>
 </head>
 <body>
 
-    <div class="bg-mesh">
-        <div class="blob" style="top: -5%; left: -5%; background: var(--clr-cyan);"></div>
-        <div class="blob" style="bottom: -5%; right: -5%; background: var(--clr-purple);"></div>
-    </div>
+    <div class="noise"></div>
 
-    <div class="app-container">
-        <main class="card-frame" id="mainCard">
-            
-            <section class="profile-header">
-                <div class="avatar-wrap">
-                    <div class="avatar-main">
-                        <svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
-                    </div>
+    <div class="container">
+        
+        <!-- Profile Section -->
+        <header class="card profile">
+            <div class="avatar-wrap">
+                <div class="avatar-inner">
+                    <svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
                 </div>
-                <div class="header-info">
-                    <h1>Karel Novák</h1>
-                    <p>Creative Tech Director</p>
-                </div>
-            </section>
-
-            <nav class="grid-socials">
-                <a href="https://instagram.com" class="ig" title="Instagram">
-                    <svg viewBox="0 0 24 24"><path d="M7.8,2H16.2C19.4,2 22,4.6 22,7.8V16.2A5.8,5.8 0 0,1 16.2,22H7.8C4.6,22 2,19.4 2,16.2V7.8A5.8,5.8 0 0,1 7.8,2M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9M18,5.75A1.25,1.25 0 0,0 16.75,7A1.25,1.25 0 0,0 18,8.25A1.25,1.25 0 0,0 19.25,7A1.25,1.25 0 0,0 18,5.75Z"/></svg>
-                </a>
-                <a href="https://facebook.com" class="fb" title="Facebook">
-                    <svg viewBox="0 0 24 24"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96A10 10 0 0 0 22 12.06C22 6.53 17.5 2.04 12 2.04Z"/></svg>
-                </a>
-                <a href="https://linkedin.com" class="li" title="LinkedIn">
-                    <svg viewBox="0 0 24 24"><path d="M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3H19M18.5,18.5V13.2A3.26,3.26 0 0,0 15.24,9.94C13.93,9.94 13,10.63 12.46,11.47V10.11H9.09V18.5H12.46V12.93C12.46,11.97 13.05,11.27 14.18,11.27C15.31,11.27 15.13,12.23 15.13,13.29V18.5H18.5M6.88,8.56A1.68,1.68 0 0,0 8.56,6.88C8.56,5.95 7.81,5.19 6.88,5.19A1.69,1.69 0 0,0 5.19,6.88C5.19,7.81 5.95,8.56 6.88,8.56M5.19,18.5H8.56V10.11H5.19V18.5Z"/></svg>
-                </a>
-                <a href="#" class="web" title="Website">
-                    <svg viewBox="0 0 24 24"><path d="M16.36,14C16.44,13.34 16.5,12.68 16.5,12C16.5,11.32 16.44,10.66 16.36,10H19.74C19.9,10.64 20,11.31 20,12C20,12.69 19.9,13.36 19.74,14M14.59,19.56C15.19,18.45 15.65,17.25 15.97,16H18.92C17.96,17.65 16.43,18.93 14.59,19.56M14.34,14H9.66C9.57,13.34 9.5,12.68 9.5,12C9.5,11.32 9.57,10.66 9.66,10H14.34C14.43,10.66 14.5,11.32 14.5,12C14.5,12.68 14.43,13.34 14.34,14M12,19.96C11.17,18.76 10.5,17.43 10.09,16H13.91C13.5,17.43 12.83,18.76 12,19.96M8,14H4.26C4.1,13.36 4,12.69 4,12C4,11.31 4.1,10.64 4.26,10H8C7.91,10.66 7.85,11.32 7.85,12C7.85,12.68 7.91,13.34 8,14M14.59,4.44C16.43,5.07 17.96,6.35 18.92,8H15.97C15.65,6.75 15.19,5.55 14.59,4.44M13.91,8H10.09C10.5,6.57 11.17,5.24 12,4.04C12.83,5.24 13.5,6.57 13.91,8M9.41,4.44C8.81,5.55 8.35,6.75 8.03,8H5.08C6.04,6.35 7.57,5.07 9.41,4.44M4.26,8H8C8.09,8.66 8.15,9.32 8.15,10H4.26C4.1,9.36 4,8.69 4,8M5.08,16H8.03C8.35,17.25 8.81,18.45 9.41,19.56C7.57,18.93 6.04,17.65 5.08,16Z"/></svg>
-                </a>
-            </nav>
-
-            <a href="tel:+420777123456" class="btn-primary">Zavolat nyní</a>
-
-            <div class="sys-logs">
-                <div>[STATUS] Identity Verified</div>
-                <div style="opacity: 0.5;">[v5.1] Gyro Tilt Enabled</div>
-            </div>
-
-            <div class="flex-row">
-                <button class="btn-util" onclick="App.ui.toggleModal(true)">Recenze</button>
-                <button class="btn-util" onclick="App.utils.exportVCF()">Uložit</button>
-            </div>
-
-        </main>
-    </div>
-
-    <!-- Modal System -->
-    <div class="modal-overlay" id="modal" onclick="App.ui.toggleModal(false)">
-        <div class="modal-card" onclick="event.stopPropagation()">
-            <h2 style="margin-bottom: 8px;">Klientské reference</h2>
-            <p style="font-size: 0.75rem; color: #555;">Lokálně uložená data na tomto zařízení.</p>
-
-            <div class="stats-view" id="stats"></div>
-            <div class="reviews-container" id="reviews"></div>
-
-            <div style="border-top: 1px solid #222; padding-top: 20px;">
-                <div class="rating-picker" id="picker">
-                    <span data-val="1">★</span><span data-val="2">★</span><span data-val="3">★</span><span data-val="4">★</span><span data-val="5" class="active">★</span>
-                </div>
-                <input type="text" id="revInput" placeholder="Napište krátký vzkaz..." style="width:100%; background:#111; border:1px solid #222; color:#fff; padding:12px; border-radius:12px; margin-bottom:12px; outline: none; font-family: inherit;">
-                <button class="btn-primary" onclick="App.logic.postReview()">Odeslat recenzi</button>
+                <div class="status-badge"></div>
             </div>
             
-            <button class="btn-util" style="width: 100%; border: none;" onclick="App.ui.toggleModal(false)">Zavřít</button>
+            <div class="info-tag">
+                <h1>Karel Novák</h1>
+                <p>Creative Tech Director</p>
+            </div>
+        </header>
+
+        <!-- Social Grid 2x2 - ZVÝRAZNĚNÉ ČTVERCE -->
+        <div class="social-grid">
+            <a href="https://instagram.com" class="social-box ig" title="Instagram">
+                <svg viewBox="0 0 24 24"><path d="M7.8,2H16.2C19.4,2 22,4.6 22,7.8V16.2A5.8,5.8 0 0,1 16.2,22H7.8C4.6,22 2,19.4 2,16.2V7.8A5.8,5.8 0 0,1 7.8,2M12,7A5,5 0 0,0 7,12A5,5 0 0,0 12,17A5,5 0 0,0 17,12A5,5 0 0,0 12,7M12,9A3,3 0 0,1 15,12A3,3 0 0,1 12,15A3,3 0 0,1 9,12A3,3 0 0,1 12,9M18,5.75A1.25,1.25 0 0,0 16.75,7A1.25,1.25 0 0,0 18,8.25A1.25,1.25 0 0,0 19.25,7A1.25,1.25 0 0,0 18,5.75Z"/></svg>
+            </a>
+            <a href="https://facebook.com" class="social-box fb" title="Facebook">
+                <svg viewBox="0 0 24 24"><path d="M12 2.04C6.5 2.04 2 6.53 2 12.06C2 17.06 5.66 21.21 10.44 21.96V14.96H7.9V12.06H10.44V9.85C10.44 7.34 11.93 5.96 14.22 5.96C15.31 5.96 16.45 6.15 16.45 6.15V8.62H15.19C13.95 8.62 13.56 9.39 13.56 10.18V12.06H16.34L15.89 14.96H13.56V21.96A10 10 0 0 0 22 12.06C22 6.53 17.5 2.04 12 2.04Z"/></svg>
+            </a>
+            <a href="https://linkedin.com" class="social-box li" title="LinkedIn">
+                <svg viewBox="0 0 24 24"><path d="M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3H19M18.5,18.5V13.2A3.26,3.26 0 0,0 15.24,9.94C13.93,9.94 13,10.63 12.46,11.47V10.11H9.09V18.5H12.46V12.93C12.46,11.97 13.05,11.27 14.18,11.27C15.31,11.27 15.13,12.23 15.13,13.29V18.5H18.5M6.88,8.56A1.68,1.68 0 0,0 8.56,6.88C8.56,5.95 7.81,5.19 6.88,5.19A1.69,1.69 0 0,0 5.19,6.88C5.19,7.81 5.95,8.56 6.88,8.56M5.19,18.5H8.56V10.11H5.19V18.5Z"/></svg>
+            </a>
+            <a href="#" class="social-box web" title="Website">
+                <svg viewBox="0 0 24 24"><path d="M16.36,14C16.44,13.34 16.5,12.68 16.5,12C16.5,11.32 16.44,10.66 16.36,10H19.74C19.9,10.64 20,11.31 20,12C20,12.69 19.9,13.36 19.74,14M14.59,19.56C15.19,18.45 15.65,17.25 15.97,16H18.92C17.96,17.65 16.43,18.93 14.59,19.56M14.34,14H9.66C9.57,13.34 9.5,12.68 9.5,12C9.5,11.32 9.57,10.66 9.66,10H14.34C14.43,10.66 14.5,11.32 14.5,12C14.5,12.68 14.43,13.34 14.34,14M12,19.96C11.17,18.76 10.5,17.43 10.09,16H13.91C13.5,17.43 12.83,18.76 12,19.96M8,14H4.26C4.1,13.36 4,12.69 4,12C4,11.31 4.1,10.64 4.26,10H8C7.91,10.66 7.85,11.32 7.85,12C7.85,12.68 7.91,13.34 8,14M14.59,4.44C16.43,5.07 17.96,6.35 18.92,8H15.97C15.65,6.75 15.19,5.55 14.59,4.44M13.91,8H10.09C10.5,6.57 11.17,5.24 12,4.04C12.83,5.24 13.5,6.57 13.91,8M9.41,4.44C8.81,5.55 8.35,6.75 8.03,8H5.08C6.04,6.35 7.57,5.07 9.41,4.44M4.26,8H8C8.09,8.66 8.15,9.32 8.15,10H4.26C4.1,9.36 4,8.69 4,8M5.08,16H8.03C8.35,17.25 8.81,18.45 9.41,19.56C7.57,18.93 6.04,17.65 5.08,16Z"/></svg>
+            </a>
+        </div>
+
+        <button class="btn-call" onclick="window.location.href='tel:+420777123456'">Zavolat partnerovi</button>
+
+        <div class="sys-info">
+            <div>&bull; LIGHT_OS v9.3.0 ACTIVE</div>
+            <div>&bull; CORE IDENTITY FRAMED</div>
+        </div>
+
+        <div class="util-row">
+            <button class="btn-util" onclick="App.ui.modal(true)">Recenze ⭐</button>
+            <button class="btn-util" onclick="App.utils.save()">Uložit 👤</button>
+        </div>
+
+    </div>
+
+    <!-- Modal -->
+    <div class="modal" id="modal" onclick="App.ui.modal(false)">
+        <div class="modal-body" onclick="event.stopPropagation()">
+            <h2 style="margin-bottom: 24px; color: #000;">Zpětná vazba</h2>
+            <div id="revList"></div>
+            
+            <div style="margin-top: 32px; border-top: 1px solid var(--border); padding-top: 24px;">
+                <input type="text" id="revIn" placeholder="Napište vzkaz...">
+                <button class="btn-call" style="width:100%;" onclick="App.logic.add()">Odeslat hodnocení</button>
+            </div>
+            <button onclick="App.ui.modal(false)" style="background: none; border: none; width: 100%; margin-top: 20px; color: #aaa; cursor: pointer; text-transform: uppercase; font-size: 0.7rem; font-weight: 800;">Zavřít</button>
         </div>
     </div>
 
-    <div id="toast">Operace byla úspěšná</div>
+    <div id="toast">Provedeno</div>
 
     <script>
-        /**
-         * App: Core logic organized into modules
-         */
         const App = {
-            state: {
-                currentRating: 5,
-                storageKey: 'nfc_v5_data'
-            },
-
+            state: { key: 'elite_v9_precision' },
             ui: {
-                mainCard: document.getElementById('mainCard'),
-                modal: document.getElementById('modal'),
-                toast: document.getElementById('toast'),
-
-                toggleModal(show) {
-                    this.modal.style.display = show ? 'flex' : 'none';
+                modal(show) {
+                    const el = document.getElementById('modal');
+                    el.style.display = show ? 'flex' : 'none';
                     document.body.style.overflow = show ? 'hidden' : 'auto';
                     if (show) App.logic.render();
                 },
-
-                showToast(msg) {
-                    this.toast.innerText = msg;
-                    this.toast.classList.add('active');
-                    setTimeout(() => this.toast.classList.remove('active'), 2500);
+                toast(msg) {
+                    const el = document.getElementById('toast');
+                    el.innerText = msg;
+                    el.classList.add('active');
+                    setTimeout(() => el.classList.remove('active'), 2500);
                 }
             },
-
             logic: {
-                init() {
-                    // Desktop: Mouse Tilt
-                    document.addEventListener('mousemove', (e) => {
-                        if (window.innerWidth < 800) return;
-                        const x = (window.innerWidth / 2 - e.pageX) / 60;
-                        const y = (window.innerHeight / 2 - e.pageY) / 60;
-                        this.applyTilt(x, y);
-                    });
-
-                    // Mobile: Gyroscope Tilt
-                    window.addEventListener('deviceorientation', (e) => {
-                        if (window.innerWidth > 800) return;
-                        // beta: pitch (-180 to 180), gamma: roll (-90 to 90)
-                        const rX = Math.min(Math.max(e.beta / 12, -8), 8);
-                        const rY = Math.min(Math.max(e.gamma / 12, -8), 8);
-                        this.applyTilt(rY, rX); // Y rotation depends on gamma, X rotation on beta
-                    });
-
-                    // Rating picker binding
-                    document.querySelectorAll('#picker span').forEach(s => {
-                        s.onclick = () => {
-                            App.state.currentRating = parseInt(s.dataset.val);
-                            document.querySelectorAll('#picker span').forEach((st, i) => {
-                                st.classList.toggle('active', i < App.state.currentRating);
-                            });
-                        };
-                    });
-                },
-
-                applyTilt(x, y) {
-                    App.ui.mainCard.style.transform = `rotateY(${-x}deg) rotateX(${y}deg)`;
-                },
-
-                postReview() {
-                    const input = document.getElementById('revInput');
-                    if (!input.value.trim()) return;
-
-                    const data = JSON.parse(localStorage.getItem(App.state.storageKey) || '[]');
-                    data.push({
-                        text: input.value,
-                        rating: App.state.currentRating,
-                        date: new Date().toLocaleDateString()
-                    });
-
-                    localStorage.setItem(App.state.storageKey, JSON.stringify(data));
-                    input.value = '';
+                add() {
+                    const inp = document.getElementById('revIn');
+                    if (!inp.value.trim()) return;
+                    const store = JSON.parse(localStorage.getItem(App.state.key) || '[]');
+                    store.push({ text: inp.value, date: new Date().toLocaleDateString() });
+                    localStorage.setItem(App.state.key, JSON.stringify(store));
+                    inp.value = '';
                     this.render();
-                    App.ui.showToast("Recenze byla uložena!");
+                    App.ui.toast("Děkujeme za zprávu!");
                 },
-
                 render() {
-                    const revBox = document.getElementById('reviews');
-                    const statBox = document.getElementById('stats');
-                    const data = JSON.parse(localStorage.getItem(App.state.storageKey) || '[]');
-
-                    if (data.length === 0) {
-                        revBox.innerHTML = '<p style="text-align:center; color:#333; margin:20px 0;">Zatím žádná data.</p>';
-                        statBox.innerHTML = '';
+                    const list = document.getElementById('revList');
+                    const store = JSON.parse(localStorage.getItem(App.state.key) || '[]');
+                    if (!store.length) {
+                        list.innerHTML = '<p style="text-align:center; color:#ccc; margin:24px 0;">Zatím žádná data.</p>';
                         return;
                     }
-
-                    const stats = {5:0, 4:0, 3:0, 2:0, 1:0};
-                    data.forEach(r => stats[r.rating]++);
-                    
-                    statBox.innerHTML = [5,4,3,2,1].map(i => {
-                        const pct = (stats[i] / data.length) * 100;
-                        return `
-                            <div class="bar-wrap">
-                                <span style="width:10px">${i}</span>
-                                <div class="bar-empty"><div class="bar-fill" style="width:${pct}%"></div></div>
-                                <span style="width:30px; text-align:right;">${Math.round(pct)}%</span>
-                            </div>
-                        `;
-                    }).join('');
-
-                    revBox.innerHTML = data.reverse().map(r => `
-                        <div class="review-card">
-                            <div style="display:flex; justify-content:space-between; margin-bottom:4px;">
-                                <span style="color:#ffc107;">${'★'.repeat(r.rating)}</span>
-                                <small style="color:#444;">${r.date}</small>
-                            </div>
-                            <div>${r.text}</div>
+                    list.innerHTML = store.reverse().map(r => `
+                        <div class="rev-item">
+                            <div style="color:#ffcc00; font-size:0.7rem; margin-bottom: 4px;">★★★★★</div>
+                            <div class="rev-text">${r.text}</div>
+                            <div style="font-size:0.6rem; color:#bbb; margin-top:8px;">${r.date}</div>
                         </div>
                     `).join('');
                 }
             },
-
             utils: {
-                exportVCF() {
+                save() {
                     const vCard = "BEGIN:VCARD\nVERSION:3.0\nFN:Karel Novák\nTEL:+420777123456\nEMAIL:hello@karelnovak.pro\nEND:VCARD";
                     const blob = new Blob([vCard], { type: "text/vcard" });
                     const url = URL.createObjectURL(blob);
-                    const link = document.createElement('a');
-                    link.href = url;
-                    link.download = "karel_novak.vcf";
-                    link.click();
-                    App.ui.showToast("Kontakt byl stažen!");
+                    const a = document.createElement('a');
+                    a.href = url; a.download = "karel_novak_contact.vcf"; a.click();
+                    App.ui.toast("Exportováno.");
                 }
             }
         };
-
-        App.logic.init();
     </script>
 </body>
 </html>
