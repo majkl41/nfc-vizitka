@@ -1,146 +1,154 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NFC Profil</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Jan Novák | Vizitka</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Inter', sans-serif;
+      background: radial-gradient(circle at top, #1b3b73, #08162f 70%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
 
-<style>
-:root {
-  --bg:#0f0f10;
-  --card:#1a1a1d;
-  --accent:#6a5cff;
-}
-body {
-  margin:0;
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  background:var(--bg);
-  color:#fff;
-}
-.app {
-  max-width:420px;
-  margin:auto;
-  padding:20px;
-}
+    .card {
+      width: 360px;
+      background: #f7f9fc;
+      border-radius: 22px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.35);
+      overflow: hidden;
+    }
 
-/* ===== HEADER ===== */
-.header {
-  text-align:center;
-  margin-bottom:30px;
-}
-.avatar {
-  width:120px;
-  height:120px;
-  border-radius:50%;
-  background:#333;
-  margin:0 auto 12px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:14px;
-  color:#aaa;
-}
-.header input {
-  width:100%;
-  background:none;
-  border:none;
-  border-bottom:1px solid #333;
-  color:#fff;
-  font-size:16px;
-  text-align:center;
-  margin-bottom:10px;
-  padding:6px;
-}
-.save-contact {
-  margin-top:10px;
-  width:100%;
-  padding:12px;
-  border-radius:12px;
-  border:none;
-  background:var(--accent);
-  color:#000;
-  font-weight:700;
-}
+    .card-header {
+      height: 120px;
+      background: #4f8df7;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
 
-/* ===== GRID ===== */
-.grid {
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:14px;
-}
-.widget {
-  background:var(--card);
-  border-radius:16px;
-  height:140px;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-weight:600;
-  cursor:grab;
-}
-.widget.dragging {
-  opacity:.5;
-}
-</style>
+    .avatar {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: #fff;
+      padding: 6px;
+      transform: translateY(48px);
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+    }
+
+    .card-body {
+      padding: 64px 22px 26px;
+      text-align: center;
+    }
+
+    .name {
+      font-size: 22px;
+      font-weight: 700;
+      color: #1f2a44;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #6b7a90;
+      margin-bottom: 22px;
+    }
+
+    a.btn-primary, a.btn {
+      text-decoration: none;
+      display: flex;
+      cursor: pointer;
+      pointer-events: auto;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: #4f8df7;
+      color: #fff;
+      border-radius: 14px;
+      padding: 14px;
+      font-size: 15px;
+      font-weight: 600;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .btn {
+      width: 100%;
+      background: #ffffff;
+      border: 1px solid #e4e9f2;
+      border-radius: 14px;
+      padding: 13px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #1f2a44;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .btn:last-child { margin-bottom: 0; }
+
+    .btn-primary:hover { background: #3c7ae6; }
+    .btn:hover { background: #f1f4fa; }
+  </style>
 </head>
-
 <body>
 
-<div class="app">
+  <div class="card">
+    <div class="card-header">
+      <div class="avatar">
+        <img src="https://i.imgur.com/8Km9tLL.png" alt="Avatar">
+      </div>
+    </div>
 
-  <!-- HEADER -->
-  <div class="header">
-    <div class="avatar">fotka</div>
-    <input id="name" placeholder="Jméno">
-    <input id="phone" placeholder="Tel. číslo">
-    <button class="save-contact">ULOŽIT</button>
+    <div class="card-body">
+      <div class="name">Jan Novák</div>
+      <div class="subtitle">Student VUT | Elektronika & Vývoj</div>
+
+      <!-- vCard download -->
+      <a class="btn-primary" href="jan-novak.vcf" download>
+        ⬇️ Uložit do kontaktů
+      </a>
+
+      <!-- Call -->
+      <a class="btn" href="tel:+420603180196">
+        📞 Zavolat (+420 603 180 196)
+      </a>
+
+      <!-- Email -->
+      <a class="btn" href="mailto:jan.novak@email.cz">
+        ✉️ Poslat Email
+      </a>
+
+      <!-- Instagram -->
+      <a class="btn" href="https://www.instagram.com" target="_blank">
+        📸 Instagram
+      </a>
+
+      <!-- Website -->
+      <a class="btn" href="https://tvoje-portfolio.cz" target="_blank">
+        🌐 Moje webové portfolio
+      </a>
+    </div>
   </div>
-
-  <!-- WIDGET GRID -->
-  <div class="grid" id="grid"></div>
-
-</div>
-
-<script>
-const KEY="nfc-grid";
-let widgets = JSON.parse(localStorage.getItem(KEY)) || [
-  {label:"Instagram"},
-  {label:"Web"},
-  {label:"Facebook"},
-  {label:"Widget"}
-];
-
-let dragIndex=null;
-const grid=document.getElementById("grid");
-
-function render(){
-  grid.innerHTML="";
-  widgets.forEach((w,i)=>{
-    const d=document.createElement("div");
-    d.className="widget";
-    d.textContent=w.label;
-    d.draggable=true;
-
-    d.ondragstart=()=>{dragIndex=i; d.classList.add("dragging");};
-    d.ondragend=()=>d.classList.remove("dragging");
-    d.ondragover=e=>e.preventDefault();
-    d.ondrop=()=>swap(i);
-
-    grid.appendChild(d);
-  });
-}
-function swap(i){
-  if(dragIndex===null) return;
-  [widgets[i],widgets[dragIndex]]=[widgets[dragIndex],widgets[i]];
-  dragIndex=null;
-  save();
-  render();
-}
-function save(){
-  localStorage.setItem(KEY,JSON.stringify(widgets));
-}
-render();
-</script>
 
 </body>
 </html>
