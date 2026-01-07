@@ -240,18 +240,21 @@
                 <div className="min-h-screen bg-slate-50 flex justify-center items-start sm:py-10 font-sans text-slate-900 relative">
                     
                     {/* TLAČÍTKO PŘEPÍNAČE REŽIMU (Vpravo dole) */}
-                    <div className="fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-3">
+                    <div className="fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-3 text-white">
                         {isEditMode && (
-                            <span className="bg-blue-600 text-white text-[10px] font-bold px-4 py-1.5 rounded-full shadow-xl uppercase tracking-[0.15em] animate-pulse border border-blue-400">
+                            <span className="bg-blue-600 text-[10px] font-black px-4 py-1.5 rounded-full shadow-xl uppercase tracking-[0.15em] animate-pulse border border-blue-400">
                                 Režim úprav
                             </span>
                         )}
                         <button 
                             onClick={() => setIsEditMode(!isEditMode)}
-                            className={`w-14 h-14 rounded-full shadow-2xl transition-all duration-500 flex items-center justify-center border-2 border-white ${isEditMode ? 'bg-green-500 text-white rotate-0 scale-110' : 'bg-blue-600 text-white hover:scale-110 active:scale-95'}`}
+                            className={`h-14 px-6 rounded-full shadow-2xl transition-all duration-500 flex items-center justify-center gap-3 border-2 border-white ${isEditMode ? 'bg-green-500 scale-110' : 'bg-blue-600 hover:scale-110 active:scale-95'}`}
                             title={isEditMode ? "Zamknout a uložit" : "Odemknout pro úpravy"}
                         >
-                            <Icon name={isEditMode ? "Check" : "PenTool"} size={28} />
+                            <Icon name={isEditMode ? "Check" : "PenTool"} size={22} />
+                            <span className="font-black uppercase tracking-widest text-xs">
+                                {isEditMode ? "HOTOVO" : "EDITOR"}
+                            </span>
                         </button>
                     </div>
 
