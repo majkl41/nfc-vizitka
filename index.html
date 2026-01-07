@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Moje NFC Vizitka</title>
-    <!-- Tailwind CSS -->
+    <!-- Tailwind CSS pro moderní vzhled -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- React a Babel -->
+    <!-- React a Babel pro běh v prohlížeči -->
     <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <!-- Lucide React UMD Build -->
+    <!-- Lucide React pro ikony -->
     <script src="https://unpkg.com/lucide-react@0.344.0/dist/umd/lucide-react.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
@@ -19,8 +19,9 @@
             background-color: #f8fafc;
             margin: 0;
             padding: 0;
+            overflow-x: hidden;
         }
-        /* Zajištění ostrých obrázků */
+        /* Zajištění maximální kvality a ostrosti log */
         img {
             image-rendering: -webkit-optimize-contrast;
             image-rendering: crisp-edges;
@@ -34,12 +35,12 @@
     <div id="root"></div>
 
     <script type="text/babel">
-        // Zajištění přístupu k Reactu pro knihovnu ikon
+        // Propojení Reactu s knihovnou ikon Lucide
         window.React = React;
 
         const { useState } = React;
         
-        // Komponenta pro ikony z knihovny Lucide
+        // Komponenta pro zobrazení ikon
         const Icon = ({ name, size = 24, className = "" }) => {
             const lib = window.LucideReact || {};
             const LucideIcon = lib[name] || lib.Link || lib.Globe || (() => null);
@@ -47,7 +48,10 @@
         };
 
         const App = () => {
-            // Seznam platforem, barvy a loga
+            // Stav pro přepínání mezi režimem Náhledu a Úprav
+            const [isEditMode, setIsEditMode] = useState(false);
+
+            // Seznam dostupných platforem a jejich stylů
             const platforms = [
                 { 
                     id: 'instagram', 
@@ -179,6 +183,7 @@
                 }
             ];
 
+            // Hlavní stav vizitky (Profil)
             const [profile, setProfile] = useState({
                 name: "Jan Novák",
                 title: "Creative Director",
@@ -186,6 +191,7 @@
                 avatar: "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=400&h=400&fit=crop"
             });
 
+            // Hlavní stav vizitky (Odkazy)
             const [links, setLinks] = useState([
                 { id: '1', platformId: 'instagram', name: 'Instagram', url: 'https://instagram.com', customIconUrl: '' },
                 { id: '2', platformId: 'github', name: 'GitHub', url: 'https://github.com', customIconUrl: '' },
@@ -193,6 +199,7 @@
                 { id: '4', platformId: 'web', name: 'Můj Web', url: 'https://google.com', customIconUrl: '' }
             ]);
 
+            // Pomocné stavy pro modální okna
             const [editingIndex, setEditingIndex] = useState(null);
             const [tempItem, setTempItem] = useState({ platformId: 'web', name: '', url: '', customIconUrl: '' });
             const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -230,38 +237,61 @@
             };
 
             return (
-                <div className="min-h-screen bg-slate-50 flex justify-center items-start sm:py-10 font-sans text-slate-900">
-                    <div className="w-full max-w-[390px] bg-white sm:rounded-[3rem] shadow-2xl overflow-hidden min-h-screen sm:min-h-0 flex flex-col border border-slate-100 relative">
+                <div className="min-h-screen bg-slate-50 flex justify-center items-start sm:py-10 font-sans text-slate-900 relative">
+                    
+                    {/* TLAČÍTKO PŘEPÍNAČE REŽIMU (Vpravo dole) */}
+                    <div className="fixed bottom-6 right-6 z-[60] flex flex-col items-end gap-3">
+                        {isEditMode && (
+                            <span className="bg-blue-600 text-white text-[10px] font-bold px-4 py-1.5 rounded-full shadow-xl uppercase tracking-[0.15em] animate-pulse border border-blue-400">
+                                Režim úprav
+                            </span>
+                        )}
+                        <button 
+                            onClick={() => setIsEditMode(!isEditMode)}
+                            className={`w-14 h-14 rounded-full shadow-2xl transition-all duration-500 flex items-center justify-center border-2 border-white ${isEditMode ? 'bg-green-500 text-white rotate-0 scale-110' : 'bg-blue-600 text-white hover:scale-110 active:scale-95'}`}
+                            title={isEditMode ? "Zamknout a uložit" : "Odemknout pro úpravy"}
+                        >
+                            <Icon name={isEditMode ? "Check" : "PenTool"} size={28} />
+                        </button>
+                    </div>
+
+                    {/* Hlavní vizitka (Telefonní náhled) */}
+                    <div className="w-full max-w-[390px] bg-white sm:rounded-[3.5rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] overflow-hidden min-h-screen sm:min-h-0 flex flex-col border border-slate-100 relative">
                         
-                        {/* Záhlaví */}
+                        {/* Horní banner s fotkou */}
                         <div className="h-32 bg-slate-900 relative">
-                            <div className="absolute -bottom-12 left-1/2 -translate-x-1/2">
-                                <div className="relative group cursor-pointer" onClick={() => setIsEditingProfile(true)}>
+                            <div className="absolute -bottom-14 left-1/2 -translate-x-1/2">
+                                <div 
+                                    className={`relative group ${isEditMode ? 'cursor-pointer active:scale-95' : 'cursor-default'}`} 
+                                    onClick={() => isEditMode && setIsEditingProfile(true)}
+                                >
                                     <img 
                                         src={profile.avatar} 
-                                        className="w-24 h-24 rounded-3xl object-cover border-4 border-white shadow-lg bg-slate-200"
+                                        className="w-28 h-28 rounded-[2.5rem] object-cover border-[6px] border-white shadow-xl bg-slate-200 transition-transform duration-300"
                                         alt="Profil"
                                         onError={(e) => { e.target.src = 'https://ui-avatars.com/api/?name=' + encodeURIComponent(profile.name); }}
                                     />
-                                    <button className="absolute -bottom-1 -right-1 p-1.5 bg-blue-600 rounded-full shadow-md text-white transition-all hover:scale-110 shadow-lg">
-                                        <Icon name="Settings" size={14} />
-                                    </button>
+                                    {isEditMode && (
+                                        <div className="absolute -bottom-1 -right-1 p-2 bg-blue-600 rounded-full shadow-lg text-white border-2 border-white animate-bounce">
+                                            <Icon name="Settings" size={16} />
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
 
-                        {/* Profilové info */}
-                        <div className="pt-16 px-6 text-center space-y-1">
-                            <h1 className="text-xl font-bold tracking-tight">{profile.name}</h1>
-                            <p className="text-sm font-medium text-blue-600 uppercase tracking-widest text-[10px]">{profile.title}</p>
-                            <p className="text-slate-400 text-xs px-8 pt-2 leading-relaxed italic">
+                        {/* Profilové údaje */}
+                        <div className="pt-16 px-8 text-center space-y-1">
+                            <h1 className="text-2xl font-black tracking-tight text-slate-800">{profile.name}</h1>
+                            <p className="text-[11px] font-bold text-blue-600 uppercase tracking-[0.2em]">{profile.title}</p>
+                            <p className="text-slate-400 text-sm px-4 pt-3 leading-relaxed font-medium italic">
                                 "{profile.bio}"
                             </p>
                         </div>
 
-                        {/* Mřížka 2x2 - UPRAVENO: Vrstvený design (Barva -> Bílá -> Zmenšené logo) */}
-                        <div className="px-8 pt-10 pb-8">
-                            <div className="grid grid-cols-2 gap-5">
+                        {/* Mřížka 2x2 s odkazy */}
+                        <div className="px-8 pt-12 pb-8">
+                            <div className="grid grid-cols-2 gap-6">
                                 {links.map((link, index) => {
                                     const style = getPlatformStyle(link.platformId);
                                     const hasError = imgErrors[link.id];
@@ -269,11 +299,17 @@
                                     return (
                                         <div key={link.id} className="relative group">
                                             <button 
-                                                onClick={() => openEdit(index)}
-                                                className={`w-full aspect-square flex flex-col items-center justify-center gap-3 p-5 rounded-[2.5rem] shadow-sm hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 relative overflow-hidden ${style.color}`}
+                                                onClick={() => {
+                                                    if (isEditMode) {
+                                                        openEdit(index);
+                                                    } else if (link.url) {
+                                                        window.open(link.url, '_blank');
+                                                    }
+                                                }}
+                                                className={`w-full aspect-square flex flex-col items-center justify-center gap-3 p-5 rounded-[2.8rem] shadow-sm transition-all duration-500 relative overflow-hidden ${style.color} ${!isEditMode ? 'hover:scale-[1.05] active:scale-90 hover:shadow-lg' : 'hover:shadow-2xl hover:-translate-y-1 ring-2 ring-transparent hover:ring-white/50'}`}
                                             >
-                                                {/* Bílá vrstva (Kruh/Zaoblený čtverec) */}
-                                                <div className="relative z-10 w-14 h-14 bg-white rounded-2xl flex items-center justify-center shadow-md overflow-hidden p-2.5">
+                                                {/* Čistá bílá karta pro logo */}
+                                                <div className="relative z-10 w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-md overflow-hidden p-3 transition-transform duration-500 group-hover:scale-110">
                                                     {link.customIconUrl ? (
                                                         <img 
                                                             src={link.customIconUrl} 
@@ -289,17 +325,21 @@
                                                         />
                                                     ) : (
                                                         <div className="text-slate-400">
-                                                            <Icon name={style.fallbackIcon} size={28} />
+                                                            <Icon name={style.fallbackIcon} size={32} />
                                                         </div>
                                                     )}
                                                 </div>
                                                 
-                                                <span className={`text-[11px] font-black uppercase tracking-wider z-10 truncate w-full px-1 ${link.platformId === 'snapchat' ? 'text-black' : 'text-white'}`}>
+                                                <span className={`text-[10px] font-black uppercase tracking-[0.1em] z-10 truncate w-full px-1 ${link.platformId === 'snapchat' ? 'text-black' : 'text-white'}`}>
                                                     {link.name}
                                                 </span>
-                                                <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity z-20 text-white/50">
-                                                    <Icon name="Edit2" size={12} />
-                                                </div>
+
+                                                {/* Editační prvek pro vizuální zpětnou vazbu */}
+                                                {isEditMode && (
+                                                    <div className="absolute top-4 right-4 z-20 text-white/80 animate-pulse">
+                                                        <Icon name="Edit2" size={14} />
+                                                    </div>
+                                                )}
                                             </button>
                                         </div>
                                     );
@@ -307,43 +347,46 @@
                             </div>
                         </div>
 
-                        {/* Akční tlačítko */}
-                        <div className="mt-auto p-6 space-y-3 bg-slate-50/50">
-                            <button className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl flex items-center justify-center gap-2 text-sm hover:bg-slate-800 transition-all active:scale-95">
-                                <Icon name="Download" size={18} /> ULOŽIT KONTAKT
+                        {/* Akční tlačítko pro uložení */}
+                        <div className="mt-auto p-8 space-y-4 bg-slate-50/50 border-t border-slate-50">
+                            <button 
+                                onClick={() => !isEditMode && window.print()}
+                                className={`w-full bg-slate-900 text-white font-black py-5 rounded-[2rem] shadow-2xl flex items-center justify-center gap-3 text-sm tracking-widest transition-all ${isEditMode ? 'opacity-30 cursor-not-allowed' : 'hover:bg-slate-800 active:scale-95 hover:shadow-slate-300'}`}
+                            >
+                                <Icon name="Download" size={20} /> ULOŽIT KONTAKT
                             </button>
-                        </div>
-
-                        <div className="pb-8 text-center text-[9px] text-slate-300 font-bold uppercase tracking-[0.3em]">
-                            NFC SMART EDITOR PRO
+                            <div className="text-center">
+                                <p className="text-[9px] text-slate-300 font-black uppercase tracking-[0.4em]">
+                                    NFC SMART EDITOR PRO
+                                </p>
+                            </div>
                         </div>
                     </div>
 
-                    {/* Editor čtverečku */}
+                    {/* MODÁLNÍ EDITOR ČTVEREČKU */}
                     {editingIndex !== null && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-                            <div className="bg-white rounded-[3rem] w-full max-w-md p-8 shadow-2xl overflow-y-auto max-h-[90vh] relative border border-white/20">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h3 className="text-xl font-black uppercase tracking-tight">Upravit odkaz</h3>
-                                    <button onClick={() => setEditingIndex(null)} className="p-2 bg-slate-100 hover:bg-red-500 hover:text-white rounded-full transition-all">
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-md transition-all duration-300">
+                            <div className="bg-white rounded-[3.5rem] w-full max-w-md p-10 shadow-2xl overflow-y-auto max-h-[90vh] relative border border-white/20 animate-in zoom-in-95 duration-300">
+                                <div className="flex justify-between items-center mb-8">
+                                    <h3 className="text-xl font-black uppercase tracking-tight text-slate-800">Upravit odkaz</h3>
+                                    <button onClick={() => setEditingIndex(null)} className="p-3 bg-slate-100 hover:bg-red-500 hover:text-white rounded-full transition-all active:scale-90">
                                         <Icon name="X" size={24} />
                                     </button>
                                 </div>
                                 
-                                <div className="space-y-6">
-                                    {/* Výběr platformy */}
-                                    <div className="space-y-3">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">Platforma</label>
-                                        <div className="grid grid-cols-4 gap-2">
+                                <div className="space-y-8">
+                                    <div className="space-y-4">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-[0.2em]">Vyber Platformu</label>
+                                        <div className="grid grid-cols-4 gap-3">
                                             {platforms.map((p) => (
                                                 <button
                                                     key={p.id}
                                                     onClick={() => selectPlatform(p)}
-                                                    className={`aspect-square flex flex-col items-center justify-center gap-1 rounded-2xl transition-all border-2 relative overflow-hidden ${
-                                                        tempItem.platformId === p.id ? 'border-blue-500 bg-blue-50 scale-105 shadow-md' : 'border-slate-50 bg-slate-50 hover:bg-white hover:border-slate-200'
+                                                    className={`aspect-square flex flex-col items-center justify-center gap-1 rounded-3xl transition-all border-2 relative overflow-hidden ${
+                                                        tempItem.platformId === p.id ? 'border-blue-600 bg-blue-50/50 scale-105 shadow-xl' : 'border-slate-50 bg-slate-50 hover:bg-white hover:border-slate-200'
                                                     }`}
                                                 >
-                                                    <div className="w-10 h-10 flex items-center justify-center relative z-10 bg-white rounded-lg shadow-sm mb-0.5">
+                                                    <div className="w-10 h-10 flex items-center justify-center bg-white rounded-xl shadow-sm mb-1">
                                                         {p.logo ? (
                                                             <img 
                                                                 src={p.logo} 
@@ -352,11 +395,11 @@
                                                                 onError={(e) => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'block'; }}
                                                             />
                                                         ) : null}
-                                                        <div style={{ display: p.logo ? 'none' : 'block' }} className={tempItem.platformId === p.id ? "text-blue-500" : "text-slate-400"}>
-                                                            <Icon name={p.fallbackIcon} size={20} />
+                                                        <div style={{ display: p.logo ? 'none' : 'block' }} className={tempItem.platformId === p.id ? "text-blue-600" : "text-slate-400"}>
+                                                            <Icon name={p.fallbackIcon} size={22} />
                                                         </div>
                                                     </div>
-                                                    <span className={`text-[8px] font-bold uppercase truncate w-full text-center px-1 ${tempItem.platformId === p.id ? 'text-blue-600' : 'text-slate-400'}`}>
+                                                    <span className={`text-[8px] font-black uppercase truncate w-full text-center px-1 ${tempItem.platformId === p.id ? 'text-blue-700' : 'text-slate-400'}`}>
                                                         {p.name}
                                                     </span>
                                                 </button>
@@ -364,38 +407,38 @@
                                         </div>
                                     </div>
 
-                                    <form onSubmit={saveLink} className="space-y-5 pt-2 border-t border-slate-100">
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">URL adresa</label>
+                                    <form onSubmit={saveLink} className="space-y-6 pt-4 border-t border-slate-100">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-[0.2em]">URL Adresa</label>
                                             <input 
                                                 type="text" value={tempItem.url}
                                                 onChange={(e) => setTempItem({...tempItem, url: e.target.value})}
-                                                className="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-blue-500 font-medium transition-all"
+                                                className="w-full p-5 bg-slate-50 rounded-[1.8rem] outline-none border-2 border-transparent focus:border-blue-500 font-bold transition-all"
                                                 placeholder="https://..."
                                             />
                                         </div>
 
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">Vlastní logo (URL)</label>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-[0.2em]">Vlastní Logo (URL)</label>
                                             <input 
                                                 type="text" value={tempItem.customIconUrl}
                                                 onChange={(e) => setTempItem({...tempItem, customIconUrl: e.target.value})}
-                                                className="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-blue-500 font-medium"
-                                                placeholder="Odkaz na .jpg nebo .png"
+                                                className="w-full p-5 bg-slate-50 rounded-[1.8rem] outline-none border-2 border-transparent focus:border-blue-500 font-bold"
+                                                placeholder="odkaz na obrázek .jpg/.png"
                                             />
                                         </div>
 
-                                        <div className="space-y-1">
-                                            <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">Název v mřížce</label>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-[0.2em]">Název v mřížce</label>
                                             <input 
                                                 type="text" value={tempItem.name}
                                                 onChange={(e) => setTempItem({...tempItem, name: e.target.value})}
-                                                className="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 focus:ring-2 focus:ring-blue-500 font-medium"
+                                                className="w-full p-5 bg-slate-50 rounded-[1.8rem] outline-none border-2 border-transparent focus:border-blue-500 font-bold"
                                             />
                                         </div>
 
-                                        <button type="submit" className="w-full bg-blue-600 text-white font-bold py-5 rounded-3xl uppercase tracking-widest text-sm active:scale-95 transition-all shadow-lg shadow-blue-200">
-                                            Uložit změny
+                                        <button type="submit" className="w-full bg-blue-600 text-white font-black py-6 rounded-[2rem] uppercase tracking-[0.2em] text-sm active:scale-95 transition-all shadow-2xl shadow-blue-200">
+                                            Hotovo
                                         </button>
                                     </form>
                                 </div>
@@ -403,50 +446,50 @@
                         </div>
                     )}
 
-                    {/* Editor profilu */}
+                    {/* MODÁLNÍ EDITOR PROFILU */}
                     {isEditingProfile && (
-                        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm">
-                            <div className="bg-white rounded-[3rem] w-full max-sm:max-w-xs p-8 shadow-2xl relative border border-white/20">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h3 className="text-xl font-black uppercase">Profil</h3>
-                                    <button onClick={() => setIsEditingProfile(false)} className="p-2 bg-slate-100 hover:bg-red-500 hover:text-white rounded-full transition-all">
+                        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-md">
+                            <div className="bg-white rounded-[3.5rem] w-full max-sm:max-w-xs p-10 shadow-2xl relative animate-in slide-in-from-bottom-10 duration-300">
+                                <div className="flex justify-between items-center mb-8">
+                                    <h3 className="text-xl font-black uppercase text-slate-800 tracking-tight">Profil</h3>
+                                    <button onClick={() => setIsEditingProfile(false)} className="p-3 bg-slate-100 hover:bg-red-500 hover:text-white rounded-full transition-all active:scale-90">
                                         <Icon name="X" size={24} />
                                     </button>
                                 </div>
-                                <div className="space-y-4">
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">URL fotky</label>
+                                <div className="space-y-5">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-[0.2em]">URL profilovky</label>
                                         <input 
                                             type="text" value={profile.avatar}
                                             onChange={(e) => setProfile({...profile, avatar: e.target.value})}
-                                            className="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 text-xs font-medium"
+                                            className="w-full p-5 bg-slate-50 rounded-[1.8rem] outline-none border-2 border-transparent focus:border-blue-500 text-xs font-bold transition-all"
                                         />
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">Jméno</label>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-[0.2em]">Jméno</label>
                                         <input 
                                             type="text" value={profile.name}
                                             onChange={(e) => setProfile({...profile, name: e.target.value})}
-                                            className="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 font-bold"
+                                            className="w-full p-5 bg-slate-50 rounded-[1.8rem] outline-none border-2 border-transparent focus:border-blue-500 font-bold"
                                         />
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">Pozice</label>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-[0.2em]">Pozice</label>
                                         <input 
                                             type="text" value={profile.title}
                                             onChange={(e) => setProfile({...profile, title: e.target.value})}
-                                            className="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 font-medium"
+                                            className="w-full p-5 bg-slate-50 rounded-[1.8rem] outline-none border-2 border-transparent focus:border-blue-500 font-bold"
                                         />
                                     </div>
-                                    <div className="space-y-1">
-                                        <label className="text-[10px] font-bold text-slate-400 uppercase ml-1 tracking-widest">Bio</label>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-black text-slate-400 uppercase ml-1 tracking-[0.2em]">Bio</label>
                                         <textarea 
                                             value={profile.bio}
                                             onChange={(e) => setProfile({...profile, bio: e.target.value})}
-                                            className="w-full p-4 bg-slate-50 rounded-2xl outline-none ring-1 ring-slate-100 h-24 font-medium"
+                                            className="w-full p-5 bg-slate-50 rounded-[1.8rem] outline-none border-2 border-transparent focus:border-blue-500 h-24 font-bold"
                                         />
                                     </div>
-                                    <button onClick={() => setIsEditingProfile(false)} className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl mt-4 uppercase tracking-widest active:scale-95 transition-all shadow-lg">Uložit</button>
+                                    <button onClick={() => setIsEditingProfile(false)} className="w-full bg-slate-900 text-white font-black py-6 rounded-[2rem] mt-4 uppercase tracking-[0.2em] active:scale-95 transition-all shadow-xl">Uložit</button>
                                 </div>
                             </div>
                         </div>
