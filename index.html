@@ -5,51 +5,79 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NFC Digital Identity | Elite Professional</title>
     <!-- 
-        NFC BUSINESS CARD - ELITE EDITION
-        Designed for high-performance networking.
+        NFC BUSINESS CARD - ELITE EDITION v3.1
         Features: 
-        - Hover-responsive elements
+        - Smooth Gyroscope & Hover 3D (Subtle)
+        - Cloud-based Review System (Firestore)
+        - Dynamic Rating Graph
         - Terminal logging system
-        - Dynamic vCard generator
-        - SVG Icon suite
-        - Responsive layout (Mobile first)
+        - Robust Auth handling
     -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, onSnapshot, query, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration (Provided by environment)
+        const firebaseConfig = JSON.parse(__firebase_config);
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // Globals for simple script access
+        window.db = db;
+        window.auth = auth;
+        window.appId = appId;
+        window.collection = collection;
+        window.addDoc = addDoc;
+        window.onSnapshot = onSnapshot;
+        window.query = query;
+        window.serverTimestamp = serverTimestamp;
+
+        // --- AUTH INITIALIZATION ---
+        const initAuth = async () => {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (error) {
+                console.error("Auth error:", error);
+            }
+        };
+
+        // Track auth state and trigger Firestore only when ready
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.currentUser = user;
+                // Start listening to reviews only after user is authenticated
+                startReviewListener();
+            }
+        });
+
+        initAuth();
+    </script>
+
     <style>
         /* --- CORE DESIGN SYSTEM --- */
         :root {
-            /* Colors */
             --primary-bg: #080808;
             --card-bg: #121212;
             --card-border: #222222;
-            --accent-neon: #00ffcc; /* The signature cyan */
+            --accent-neon: #00ffcc;
             --accent-glow: rgba(0, 255, 204, 0.4);
             --text-primary: #ffffff;
             --text-secondary: #b0b0b0;
-            --text-muted: #666666;
-            
-            /* Gradients */
-            --grad-dark: linear-gradient(145deg, #1a1a1a, #0a0a0a);
-            --grad-accent: linear-gradient(135deg, #00ffcc 0%, #00ccaa 100%);
-            
-            /* Animation & Sizing */
             --radius-lg: 24px;
             --radius-md: 16px;
-            --radius-sm: 8px;
-            --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             --transition-bounce: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            
-            /* Fonts */
-            --font-main: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            --font-mono: 'JetBrains Mono', 'Fira Code', 'Courier New', monospace;
+            --font-main: 'Inter', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
         }
 
-        /* --- BASE STYLES --- */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            outline: none;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
             background-color: var(--primary-bg);
@@ -63,336 +91,118 @@
             padding: 20px;
         }
 
-        /* --- ANIMATED BACKGROUND --- */
         .grid-bg {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.05) 1px, transparent 0);
             background-size: 32px 32px;
             z-index: -2;
         }
 
-        .blob {
-            position: fixed;
-            width: 500px;
-            height: 500px;
-            background: var(--accent-glow);
-            filter: blur(120px);
-            border-radius: 50%;
-            z-index: -1;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            opacity: 0.2;
-            animation: moveBlob 15s infinite alternate;
-        }
-
-        @keyframes moveBlob {
-            0% { transform: translate(-50%, -50%) scale(1); }
-            100% { transform: translate(-45%, -55%) scale(1.1); }
-        }
-
-        /* --- MAIN CARD --- */
-        .identity-container {
-            width: 100%;
-            max-width: 440px;
-            perspective: 1000px;
-        }
+        .identity-container { width: 100%; max-width: 440px; perspective: 1500px; }
 
         .identity-card {
-            background: var(--grad-dark);
+            background: linear-gradient(145deg, #1a1a1a, #0a0a0a);
             border: 1px solid var(--card-border);
             border-radius: var(--radius-lg);
             padding: 40px 25px;
             box-shadow: 0 30px 60px rgba(0,0,0,0.8);
+            transition: transform 0.1s ease-out, box-shadow 0.3s ease;
+            transform-style: preserve-3d;
             position: relative;
-            overflow: hidden;
-            transition: var(--transition-bounce);
         }
 
-        .identity-card:hover {
-            border-color: var(--accent-neon);
-            box-shadow: 0 0 40px var(--accent-glow);
-            transform: translateY(-5px);
-        }
-
-        /* --- HEADER & PROFILE --- */
-        .profile-section {
-            text-align: center;
-            margin-bottom: 40px;
-        }
-
-        .avatar-container {
-            position: relative;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
-
+        .profile-section { text-align: center; margin-bottom: 30px; }
         .avatar-main {
-            width: 140px;
-            height: 140px;
-            border-radius: 50%;
-            border: 3px solid var(--accent-neon);
-            padding: 6px;
-            background: var(--card-bg);
-            transition: var(--transition-bounce);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .avatar-main svg {
-            width: 60%;
-            height: 60%;
-            fill: var(--accent-neon);
-        }
-
-        .identity-card:hover .avatar-main {
-            transform: scale(1.08) rotate(3deg);
-            box-shadow: 0 0 20px var(--accent-glow);
-        }
-
-        .online-status {
-            position: absolute;
-            bottom: 12px;
-            right: 12px;
-            width: 20px;
-            height: 20px;
-            background: var(--accent-neon);
-            border: 4px solid var(--card-bg);
-            border-radius: 50%;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(0, 255, 204, 0.7); }
-            70% { box-shadow: 0 0 0 10px rgba(0, 255, 204, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(0, 255, 204, 0); }
-        }
-
-        .name-title h1 {
-            font-size: 2.2rem;
-            font-weight: 900;
-            letter-spacing: -1px;
-            margin-bottom: 4px;
-            color: #fff;
-        }
-
-        .name-title p {
-            font-family: var(--font-mono);
-            color: var(--accent-neon);
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-        }
-
-        /* --- LINK GRID --- */
-        .links-wrapper {
-            display: grid;
-            gap: 12px;
-        }
-
-        .card-link {
-            display: flex;
-            align-items: center;
-            padding: 18px 22px;
+            width: 120px; height: 120px; border-radius: 50%;
+            border: 3px solid var(--accent-neon); margin: 0 auto 15px;
+            display: flex; align-items: center; justify-content: center;
             background: #1a1a1a;
-            border: 1px solid var(--card-border);
-            border-radius: var(--radius-md);
-            color: var(--text-primary);
-            text-decoration: none;
-            font-weight: 600;
-            transition: var(--transition-bounce);
-            position: relative;
         }
+        .avatar-main svg { width: 60px; height: 60px; fill: var(--accent-neon); }
 
-        /* Hover states for links (The "zvetseni" you requested) */
+        .name-title h1 { font-size: 2rem; margin-bottom: 5px; }
+        .name-title p { font-family: var(--font-mono); color: var(--accent-neon); font-size: 0.8rem; letter-spacing: 2px; text-transform: uppercase; }
+
+        .links-wrapper { display: grid; gap: 10px; margin-bottom: 20px; }
+        .card-link {
+            display: flex; align-items: center; padding: 15px 20px;
+            background: #1a1a1a; border: 1px solid var(--card-border);
+            border-radius: var(--radius-md); color: #fff; text-decoration: none;
+            font-weight: 600; transition: var(--transition-bounce);
+        }
         .card-link:hover {
-            transform: scale(1.05) translateX(5px);
-            background: var(--accent-neon);
-            color: var(--primary-bg);
-            border-color: var(--accent-neon);
-            box-shadow: 0 10px 25px rgba(0, 255, 204, 0.3);
+            transform: scale(1.03) translateX(5px);
+            background: var(--accent-neon); color: #000;
         }
 
-        .card-link svg {
-            width: 24px;
-            height: 24px;
-            margin-right: 15px;
-            fill: currentColor;
+        /* --- REVIEW BUTTONS --- */
+        .review-trigger {
+            width: 100%; padding: 15px; background: transparent;
+            border: 2px solid var(--accent-neon); color: var(--accent-neon);
+            border-radius: var(--radius-md); font-weight: 800; cursor: pointer;
+            margin-top: 10px; transition: 0.3s; text-transform: uppercase;
         }
+        .review-trigger:hover { background: var(--accent-neon); color: #000; }
 
-        .link-text {
-            flex-grow: 1;
-            font-size: 1.05rem;
+        /* --- MODAL SYSTEM --- */
+        .modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 1000;
+            display: none; justify-content: center; align-items: center;
+            padding: 20px; overflow-y: auto;
         }
-
-        .link-arrow {
-            opacity: 0.4;
-            transition: var(--transition-smooth);
+        .modal.active { display: flex; }
+        .modal-content {
+            background: #161616; width: 100%; max-width: 500px;
+            border-radius: var(--radius-lg); padding: 30px;
+            border: 1px solid #333; position: relative;
         }
+        .close-modal { position: absolute; top: 20px; right: 20px; cursor: pointer; font-size: 1.5rem; color: #666; }
 
-        .card-link:hover .link-arrow {
-            opacity: 1;
-            transform: translateX(5px);
+        /* --- REVIEW STYLES --- */
+        .rating-stats { margin-bottom: 25px; }
+        .stat-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; }
+        .bar-bg { flex: 1; height: 8px; background: #222; border-radius: 10px; }
+        .bar-fill { height: 100%; background: var(--accent-neon); border-radius: 10px; transition: width 1s; }
+        .stat-label { min-width: 60px; font-size: 0.8rem; color: #888; }
+
+        .review-form { margin-top: 20px; border-top: 1px solid #333; padding-top: 20px; }
+        .review-form input, .review-form textarea {
+            width: 100%; background: #000; border: 1px solid #333;
+            color: #fff; padding: 12px; border-radius: 8px; margin-bottom: 10px;
         }
+        .star-rating { display: flex; gap: 5px; margin-bottom: 15px; color: #444; font-size: 1.5rem; cursor: pointer; }
+        .star.active { color: var(--accent-neon); }
 
-        /* --- SKILLS SECTION --- */
-        .skills-container {
-            margin-top: 35px;
-            padding: 20px;
-            background: rgba(255,255,255,0.03);
-            border-radius: var(--radius-md);
-            border: 1px solid rgba(255,255,255,0.05);
-        }
+        .reviews-list { max-height: 300px; overflow-y: auto; margin-top: 20px; }
+        .review-item { background: #222; padding: 15px; border-radius: 12px; margin-bottom: 10px; }
+        .review-item-header { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 0.9rem; }
+        .review-stars { color: var(--accent-neon); }
 
-        .skill-header {
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            color: var(--text-muted);
-            margin-bottom: 15px;
-            display: flex;
-            justify-content: space-between;
-        }
-
-        .skill-bar {
-            height: 6px;
-            background: #222;
-            border-radius: 10px;
-            overflow: hidden;
-            margin-bottom: 12px;
-        }
-
-        .skill-progress {
-            height: 100%;
-            background: var(--accent-neon);
-            border-radius: 10px;
-            transition: width 1.5s ease;
-        }
-
-        /* --- TERMINAL (The screenshot style) --- */
+        /* --- TERMINAL --- */
         .terminal-block {
-            margin-top: 35px;
-            background: #000;
-            border-radius: var(--radius-sm);
-            padding: 15px;
-            font-family: var(--font-mono);
-            border: 1px solid #333;
+            margin-top: 25px; background: #000; border-radius: 8px;
+            padding: 12px; font-family: var(--font-mono); border: 1px solid #333; font-size: 0.75rem;
         }
-
-        .terminal-top {
-            display: flex;
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-
-        .t-dot { width: 10px; height: 10px; border-radius: 50%; }
-        .t-red { background: #ff5f56; }
-        .t-yellow { background: #ffbd2e; }
-        .t-green { background: #27c93f; }
-
-        .terminal-body {
-            color: var(--accent-neon);
-            font-size: 0.8rem;
-            line-height: 1.4;
-        }
-
-        .cursor {
-            display: inline-block;
-            width: 8px;
-            height: 15px;
-            background: var(--accent-neon);
-            margin-left: 5px;
-            animation: blink 1s infinite;
-            vertical-align: middle;
-        }
-
+        .terminal-body { color: var(--accent-neon); }
+        .cursor { display: inline-block; width: 8px; height: 14px; background: var(--accent-neon); animation: blink 1s infinite; vertical-align: middle; }
         @keyframes blink { 50% { opacity: 0; } }
 
-        /* --- FOOTER / ACTIONS --- */
-        .footer-actions {
-            margin-top: 30px;
-            display: flex;
-            gap: 10px;
-        }
-
-        .action-btn {
-            flex: 1;
-            padding: 15px;
-            background: transparent;
-            border: 2px solid var(--accent-neon);
-            color: var(--accent-neon);
-            border-radius: var(--radius-md);
-            font-weight: 700;
-            cursor: pointer;
-            transition: var(--transition-smooth);
-            text-transform: uppercase;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-        }
-
-        .action-btn:hover {
-            background: var(--accent-neon);
-            color: var(--primary-bg);
-            box-shadow: 0 0 15px var(--accent-glow);
-        }
-
-        .action-btn.primary {
-            background: var(--accent-neon);
-            color: var(--primary-bg);
-        }
-
-        .action-btn.primary:hover {
-            background: #fff;
-            border-color: #fff;
-        }
-
-        /* --- TOAST --- */
-        .toast {
-            position: fixed;
-            bottom: -100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--accent-neon);
-            color: #000;
-            padding: 12px 30px;
-            border-radius: 50px;
-            font-weight: 800;
-            z-index: 9999;
-            transition: bottom 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        }
-
-        .toast.visible { bottom: 40px; }
-
-        /* --- MOBILE OPTIMIZATION --- */
-        @media (max-width: 400px) {
-            .identity-card { padding: 30px 15px; }
-            .name-title h1 { font-size: 1.8rem; }
-        }
+        #toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background: var(--accent-neon); color: #000; padding: 12px 30px; border-radius: 50px; font-weight: 800; transition: 0.5s; z-index: 2000; }
+        #toast.visible { bottom: 40px; }
     </style>
 </head>
 <body>
 
     <div class="grid-bg"></div>
-    <div class="blob"></div>
 
     <div class="identity-container">
         <div class="identity-card" id="mainCard">
             
-            <!-- Header -->
             <div class="profile-section">
-                <div class="avatar-container">
-                    <div class="avatar-main">
-                        <!-- Custom SVG Icon for Avatar -->
-                        <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z" />
-                        </svg>
-                    </div>
-                    <div class="online-status"></div>
+                <div class="avatar-main">
+                    <svg viewBox="0 0 24 24"><path d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"/></svg>
                 </div>
                 <div class="name-title">
                     <h1>Karel Novák</h1>
@@ -400,189 +210,217 @@
                 </div>
             </div>
 
-            <!-- Main Links (The scaled ones) -->
             <div class="links-wrapper">
-                <a href="tel:+420777123456" class="card-link">
-                    <svg viewBox="0 0 24 24"><path d="M6.62,10.79C8.06,13.62 10.38,15.94 13.21,17.38L15.41,15.18C15.69,14.9 16.08,14.82 16.43,14.93C17.55,15.3 18.75,15.5 20,15.5A1,1 0 0,1 21,16.5V20A1,1 0 0,1 20,21A17,17 0 0,1 3,4A1,1 0 0,1 4,3H7.5A1,1 0 0,1 8.5,4C8.5,5.25 8.7,6.45 9.07,7.57C9.18,7.92 9.1,8.31 8.82,8.59L6.62,10.79Z"/></svg>
-                    <span class="link-text">Zavolat</span>
-                    <span class="link-arrow">→</span>
-                </a>
-
-                <a href="mailto:contact@karelnovak.tech" class="card-link">
-                    <svg viewBox="0 0 24 24"><path d="M20,8L12,13L4,8V6L12,11L20,6M20,4H4C2.89,4 2,4.89 2,6V18A2,2 0 0,0 4,20H20A2,2 0 0,0 22,18V6C22,4.89 21.1,4 20,4Z"/></svg>
-                    <span class="link-text">Poslat Email</span>
-                    <span class="link-arrow">→</span>
-                </a>
-
-                <a href="https://linkedin.com" target="_blank" class="card-link">
-                    <svg viewBox="0 0 24 24"><path d="M19,3A2,2 0 0,1 21,5V19A2,2 0 0,1 19,21H5A2,2 0 0,1 3,19V5A2,2 0 0,1 5,3H19M18.5,18.5V13.2A3.26,3.26 0 0,0 15.24,9.94C13.93,9.94 13,10.63 12.46,11.47V10.11H9.09V18.5H12.46V12.93C12.46,11.97 13.05,11.27 14.18,11.27C15.31,11.27 15.13,12.23 15.13,13.29V18.5H18.5M6.88,8.56A1.68,1.68 0 0,0 8.56,6.88C8.56,5.95 7.81,5.19 6.88,5.19A1.69,1.69 0 0,0 5.19,6.88C5.19,7.81 5.95,8.56 6.88,8.56M5.19,18.5H8.56V10.11H5.19V18.5Z"/></svg>
-                    <span class="link-text">LinkedIn</span>
-                    <span class="link-arrow">→</span>
-                </a>
-
-                <a href="https://github.com" target="_blank" class="card-link">
-                    <svg viewBox="0 0 24 24"><path d="M12,2A10,10 0 0,0 2,12C2,16.42 4.87,20.17 8.84,21.5C9.34,21.58 9.5,21.27 9.5,21.03C9.5,20.82 9.5,20.24 9.5,19.41C6.73,20.03 6.14,18.1 6.14,18.1C5.69,16.96 5.03,16.65 5.03,16.65C4.13,16.03 5.1,16.05 5.1,16.05C6.1,16.12 6.63,17.08 6.63,17.08C7.5,18.58 8.92,18.15 9.49,17.89C9.57,17.25 9.83,16.82 10.11,16.57C7.89,16.32 5.56,15.47 5.56,11.64C5.56,10.55 5.95,9.65 6.59,8.94C6.48,8.68 6.14,7.67 6.69,6.31C6.69,6.31 7.53,6.04 9.44,7.33C10.23,7.11 11.08,7 11.94,7C12.8,7 13.65,7.11 14.44,7.33C16.35,6.04 17.18,6.31 17.18,6.31C17.73,7.67 17.39,8.68 17.29,8.94C17.93,9.65 18.32,10.55 18.32,11.64C18.32,15.48 15.98,16.31 13.75,16.56C14.11,16.87 14.43,17.48 14.43,18.41C14.43,19.74 14.42,20.81 14.42,21.13C14.42,21.37 14.58,21.68 15.09,21.5C19.06,20.17 22,16.42 22,12A10,10 0 0,0 12,2Z"/></svg>
-                    <span class="link-text">GitHub</span>
-                    <span class="link-arrow">→</span>
-                </a>
+                <a href="tel:+420777123456" class="card-link">📞 Zavolat</a>
+                <a href="mailto:contact@karelnovak.tech" class="card-link">✉️ Poslat Email</a>
+                <a href="https://linkedin.com" target="_blank" class="card-link">💼 LinkedIn</a>
             </div>
 
-            <!-- Skills Section (Extra Content) -->
-            <div class="skills-container">
-                <div class="skill-header">
-                    <span>Fullstack Development</span>
-                    <span>95%</span>
-                </div>
-                <div class="skill-bar"><div class="skill-progress" style="width: 95%;"></div></div>
-                
-                <div class="skill-header">
-                    <span>UI/UX Design</span>
-                    <span>88%</span>
-                </div>
-                <div class="skill-bar"><div class="skill-progress" style="width: 88%;"></div></div>
-            </div>
-
-            <!-- Terminal Bar (From your screen) -->
             <div class="terminal-block">
-                <div class="terminal-top">
-                    <div class="t-dot t-red"></div>
-                    <div class="t-dot t-yellow"></div>
-                    <div class="t-dot t-green"></div>
-                </div>
-                <div class="terminal-body">
-                    <span id="termLog"></span><span class="cursor"></span>
-                </div>
+                <div class="terminal-body"><span id="termLog"></span><span class="cursor"></span></div>
             </div>
 
-            <!-- Bottom Actions -->
-            <div class="footer-actions">
-                <button class="action-btn" onclick="shareID()">Sdílet</button>
-                <button class="action-btn primary" onclick="downloadVCard()">Uložit kontakt</button>
-            </div>
+            <button class="review-trigger" onclick="toggleModal('reviewsModal')">Zobrazit Recenze ⭐</button>
+            <button class="review-trigger" style="border-style: dashed; margin-top: 15px;" onclick="downloadVCard()">Uložit kontakt</button>
 
         </div>
     </div>
 
-    <!-- Notification -->
-    <div id="toast" class="toast">Akce byla úspěšná! 🚀</div>
+    <!-- MODAL RECENZÍ -->
+    <div id="reviewsModal" class="modal">
+        <div class="modal-content">
+            <span class="close-modal" onclick="toggleModal('reviewsModal')">✕</span>
+            <h2 style="margin-bottom: 20px;">Hodnocení & Recenze</h2>
+            
+            <!-- Graf hodnocení -->
+            <div class="rating-stats" id="ratingStats">
+                <!-- Dynamicky plněno JS -->
+            </div>
+
+            <!-- Seznam recenzí -->
+            <div class="reviews-list" id="reviewsList">
+                <p style="color: #666; text-align: center;">Načítám recenze...</p>
+            </div>
+
+            <!-- Formulář -->
+            <div class="review-form">
+                <h3>Napsat recenzi</h3>
+                <div class="star-rating" id="formStars">
+                    <span class="star" data-val="1">★</span>
+                    <span class="star" data-val="2">★</span>
+                    <span class="star" data-val="3">★</span>
+                    <span class="star" data-val="4">★</span>
+                    <span class="star" data-val="5">★</span>
+                </div>
+                <input type="text" id="revName" placeholder="Tvoje jméno">
+                <textarea id="revText" placeholder="Tvůj vzkaz..." rows="3"></textarea>
+                <button class="review-trigger" id="submitBtn" onclick="submitReview()">Odeslat recenzi</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast">Akce úspěšná!</div>
 
     <script>
-        // --- DATA & CONFIG ---
-        const user = {
-            name: "Karel Novák",
-            title: "Creative Tech Architect",
-            phone: "+420777123456",
-            email: "contact@karelnovak.tech",
-            web: "https://karelnovak.tech"
-        };
+        // --- MODAL LOGIC ---
+        function toggleModal(id) {
+            document.getElementById(id).classList.toggle('active');
+        }
+
+        // --- 3D INTERACTION (SUBTLE & GYRO) ---
+        const card = document.getElementById('mainCard');
+        
+        // Desktop Hover
+        document.addEventListener('mousemove', (e) => {
+            if (window.innerWidth > 800) {
+                const xAxis = (window.innerWidth / 2 - e.pageX) / 90;
+                const yAxis = (window.innerHeight / 2 - e.pageY) / 90;
+                card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg)`;
+            }
+        });
+
+        // Mobile Gyroscope
+        window.addEventListener('deviceorientation', (e) => {
+            if (window.innerWidth <= 800) {
+                const x = e.beta / 10;
+                const y = -e.gamma / 10;
+                const limitedX = Math.max(-15, Math.min(15, x));
+                const limitedY = Math.max(-15, Math.min(15, y));
+                card.style.transform = `rotateX(${limitedX}deg) rotateY(${limitedY}deg)`;
+            }
+        });
 
         // --- TERMINAL LOGIC ---
         const termLog = document.getElementById('termLog');
-        const logs = [
-            "> Inicializace systému...",
-            "> Načítám NFC modul...",
-            "> Identita ověřena: Elite.",
-            "> Žádné lagy detekovány.",
-            "> Připraven k propojení."
-        ];
-        
-        let currentLog = 0;
-        let charPos = 0;
-        let isDeleting = false;
+        const logs = ["> Systém online.", "> Gyroskop aktivní.", "> NFC ID připraveno.", "> Žádné lagy."];
+        let currentLog = 0, charPos = 0, isDeleting = false;
 
         function updateTerminal() {
             const currentStr = logs[currentLog];
-            
             if (!isDeleting) {
                 termLog.textContent = currentStr.substring(0, charPos++);
-                if (charPos > currentStr.length) {
-                    isDeleting = true;
-                    setTimeout(updateTerminal, 2000);
-                    return;
-                }
+                if (charPos > currentStr.length) { isDeleting = true; setTimeout(updateTerminal, 2000); return; }
             } else {
                 termLog.textContent = currentStr.substring(0, charPos--);
-                if (charPos < 2) { // Keep the "> "
-                    isDeleting = false;
-                    currentLog = (currentLog + 1) % logs.length;
-                }
+                if (charPos < 2) { isDeleting = false; currentLog = (currentLog + 1) % logs.length; }
             }
-            
             setTimeout(updateTerminal, isDeleting ? 30 : 60);
         }
 
-        // --- VCARD GENERATOR ---
-        function downloadVCard() {
-            const vCardData = [
-                "BEGIN:VCARD",
-                "VERSION:3.0",
-                `FN:${user.name}`,
-                `TITLE:${user.title}`,
-                `TEL;TYPE=CELL:${user.phone}`,
-                `EMAIL:${user.email}`,
-                `URL:${user.web}`,
-                "END:VCARD"
-            ].join("\n");
+        // --- REVIEW SYSTEM (FIRESTORE) ---
+        let selectedRating = 5;
+        const stars = document.querySelectorAll('#formStars .star');
+        stars.forEach(s => {
+            s.addEventListener('click', () => {
+                selectedRating = parseInt(s.dataset.val);
+                stars.forEach((st, idx) => st.classList.toggle('active', idx < selectedRating));
+            });
+        });
+        stars.forEach((st, idx) => st.classList.toggle('active', idx < 5));
 
-            const blob = new Blob([vCardData], { type: "text/vcard" });
-            const url = window.URL.createObjectURL(blob);
-            const link = document.createElement("a");
-            link.href = url;
-            link.setAttribute("download", `${user.name.replace(" ", "_")}.vcf`);
-            document.body.appendChild(link);
-            link.click();
-            document.body.removeChild(link);
+        function startReviewListener() {
+            if (!window.db || !window.appId) return;
+
+            const revCol = window.collection(window.db, 'artifacts', window.appId, 'public', 'data', 'reviews');
             
-            showToast("Kontakt uložen do stahování! 👤");
+            window.onSnapshot(revCol, (snapshot) => {
+                const reviews = [];
+                snapshot.forEach(doc => reviews.push(doc.data()));
+                renderReviews(reviews);
+                renderStats(reviews);
+            }, (err) => {
+                console.error("Firestore error:", err);
+            });
         }
 
-        // --- SHARE LOGIC ---
-        function shareID() {
-            if (navigator.share) {
-                navigator.share({
-                    title: user.name,
-                    text: `Moje digitální vizitka: ${user.title}`,
-                    url: window.location.href
-                }).then(() => showToast("Sdílení dokončeno!"))
-                  .catch(() => showToast("Sdílení zrušeno."));
-            } else {
-                // Fallback: Copy to clipboard
-                const dummy = document.createElement('input');
-                document.body.appendChild(dummy);
-                dummy.value = window.location.href;
-                dummy.select();
-                document.execCommand('copy');
-                document.body.removeChild(dummy);
-                showToast("Odkaz zkopírován do schránky! 🔗");
+        function renderReviews(reviews) {
+            const list = document.getElementById('reviewsList');
+            if (reviews.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#555;">Zatím žádné recenze. Buď první!</p>';
+                return;
+            }
+            reviews.sort((a, b) => (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0));
+            
+            list.innerHTML = reviews.map(r => `
+                <div class="review-item">
+                    <div class="review-item-header">
+                        <strong>${r.name || 'Anonym'}</strong>
+                        <span class="review-stars">${'★'.repeat(r.rating || 0)}</span>
+                    </div>
+                    <p style="font-size:0.85rem; color:#bbb;">${r.text || ''}</p>
+                </div>
+            `).join('');
+        }
+
+        function renderStats(reviews) {
+            const statsCont = document.getElementById('ratingStats');
+            const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+            reviews.forEach(r => { if (r.rating) counts[r.rating]++; });
+            
+            const total = reviews.length || 1;
+            let html = '';
+            for (let i = 5; i >= 1; i--) {
+                const pct = (counts[i] / total) * 100;
+                html += `
+                    <div class="stat-row">
+                        <span class="stat-label">${i} hvězd</span>
+                        <div class="bar-bg"><div class="bar-fill" style="width: ${pct}%"></div></div>
+                        <span style="font-size:0.7rem; color:#666; min-width:30px;">${Math.round(pct)}%</span>
+                    </div>
+                `;
+            }
+            statsCont.innerHTML = html;
+        }
+
+        async function submitReview() {
+            if (!window.currentUser) {
+                showToast("Počkej na přihlášení...");
+                return;
+            }
+            const name = document.getElementById('revName').value;
+            const text = document.getElementById('revText').value;
+            if (!text) return showToast("Napiš aspoň krátký vzkaz!");
+
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+
+            try {
+                const revCol = window.collection(window.db, 'artifacts', window.appId, 'public', 'data', 'reviews');
+                await window.addDoc(revCol, {
+                    name: name || 'Anonym',
+                    text: text,
+                    rating: selectedRating,
+                    createdAt: window.serverTimestamp()
+                });
+                document.getElementById('revName').value = '';
+                document.getElementById('revText').value = '';
+                showToast("Díky za recenzi! ❤️");
+            } catch (e) {
+                console.error("Submission error:", e);
+                showToast("Chyba při odesílání.");
+            } finally {
+                btn.disabled = false;
             }
         }
 
-        // --- UI HELPERS ---
         function showToast(msg) {
-            const toast = document.getElementById('toast');
-            toast.textContent = msg;
-            toast.classList.add('visible');
-            setTimeout(() => toast.classList.remove('visible'), 3000);
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.classList.add('visible');
+            setTimeout(() => t.classList.remove('visible'), 3000);
         }
 
-        // --- INITIALIZATION ---
+        function downloadVCard() {
+            const vCard = "BEGIN:VCARD\nVERSION:3.0\nFN:Karel Novák\nTEL:+420777123456\nEMAIL:contact@karelnovak.tech\nEND:VCARD";
+            const blob = new Blob([vCard], { type: "text/vcard" });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url; a.download = "karel_novak.vcf"; a.click();
+            showToast("Vizitka připravena! 👤");
+        }
+
         window.onload = () => {
-            console.log("%c NFC IDENTITY ELITE v2.0 ACTIVE ", "background: #00ffcc; color: #000; padding: 10px; font-weight: bold;");
             updateTerminal();
-            
-            // Subtilní 3D efekt na kartě při pohybu myši (pro desktop)
-            const card = document.getElementById('mainCard');
-            document.addEventListener('mousemove', (e) => {
-                if (window.innerWidth > 800) {
-                    const xAxis = (window.innerWidth / 2 - e.pageX) / 45;
-                    const yAxis = (window.innerHeight / 2 - e.pageY) / 45;
-                    card.style.transform = `rotateY(${xAxis}deg) rotateX(${yAxis}deg) translateY(-5px)`;
-                }
-            });
-            
-            document.addEventListener('mouseleave', () => {
-                card.style.transform = `rotateY(0deg) rotateX(0deg)`;
-            });
         };
     </script>
 </body>
