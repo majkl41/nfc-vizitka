@@ -2,114 +2,527 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digital Identity | Premium</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Digital Identity | Enterprise Elite</title>
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
-    <style>
-        :root { --accent: #00f2ff; }
-        body { background: #000; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
-        
-        /* Animované pozadí */
-        .bg-gradient {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: radial-gradient(circle at 50% 50%, #1a1a1a 0%, #000 100%);
-            z-index: -1;
-        }
-        .blob {
-            position: absolute; width: 300px; height: 300px;
-            background: var(--accent); filter: blur(120px);
-            opacity: 0.15; border-radius: 50%; animation: move 20s infinite alternate;
-        }
-        @keyframes move { from { transform: translate(-10%, -10%); } to { transform: translate(20%, 20%); } }
 
-        /* Skleněný efekt */
-        .glass-card {
-            background: rgba(255, 255, 255, 0.03);
-            backdrop-filter: blur(15px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 28px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    <style>
+        :root {
+            --primary: #00f2ff;
+            --secondary: #7000ff;
+            --bg: #050505;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --border: rgba(255, 255, 255, 0.1);
         }
-        
-        .btn-glow:hover {
-            box-shadow: 0 0 20px rgba(0, 242, 255, 0.4);
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Space Grotesk', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* Particles Canvas */
+        #particles-js {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-track { background: var(--bg); }
+        ::-webkit-scrollbar-thumb { background: var(--primary); border-radius: 10px; }
+
+        /* Glassmorphism Classes */
+        .glass {
+            background: var(--card-bg);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+        }
+
+        .glass-hover:hover {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(0, 242, 255, 0.2);
             transform: translateY(-2px);
+            transition: all 0.3s ease;
+        }
+
+        /* Animations */
+        @keyframes scanline {
+            0% { bottom: 100%; }
+            100% { bottom: 0%; }
+        }
+
+        .scanline {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: rgba(0, 242, 255, 0.1);
+            z-index: 10;
+            animation: scanline 8s linear infinite;
+            pointer-events: none;
+        }
+
+        .glitch-text {
+            position: relative;
+            display: inline-block;
+        }
+
+        .glitch-text::before, .glitch-text::after {
+            content: attr(data-text);
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: var(--bg);
+        }
+
+        .glitch-text::after {
+            left: 2px;
+            text-shadow: -2px 0 #ff00c1;
+            clip: rect(44px, 450px, 56px, 0);
+            animation: glitch-anim 5s infinite linear alternate-reverse;
+        }
+
+        @keyframes glitch-anim {
+            0% { clip: rect(31px, 9999px, 94px, 0); }
+            20% { clip: rect(62px, 9999px, 42px, 0); }
+            /* ... more keyframes ... */
+            100% { clip: rect(89px, 9999px, 98px, 0); }
+        }
+
+        /* Tab Logic */
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.5s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .active-tab {
+            color: var(--primary);
+            border-bottom: 2px solid var(--primary);
+        }
+
+        /* Card Pulse */
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #00ff00;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+            box-shadow: 0 0 10px #00ff00;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.3; }
+            100% { opacity: 1; }
+        }
+
+        /* Neumorphic Buttons */
+        .neu-btn {
+            background: #0a0a0a;
+            box-shadow: 5px 5px 10px #030303, -2px -2px 10px #111;
+            border-radius: 12px;
+            transition: all 0.2s ease;
+        }
+
+        .neu-btn:active {
+            box-shadow: inset 2px 2px 5px #030303, inset -2px -2px 5px #111;
+        }
+
+        /* Profile Ring Animation */
+        .profile-ring {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 130px; height: 130px;
+            border: 2px dashed var(--primary);
+            border-radius: 50%;
+            animation: rotate 10s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        /* Floating Shapes */
+        .shape {
+            position: absolute;
+            z-index: -1;
+            opacity: 0.2;
+            filter: blur(40px);
         }
     </style>
 </head>
-<body class="flex flex-col items-center min-h-screen p-4">
-    <div class="bg-gradient"></div>
-    <div class="blob"></div>
+<body>
 
-    <main class="w-full max-w-md animate__animated animate__fadeInUp">
+    <div class="scanline"></div>
+    <canvas id="particles-js"></canvas>
+
+    <audio id="clickSound" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/2571/2571-preview.mp3" type="audio/mpeg">
+    </audio>
+    <audio id="successSound" preload="auto">
+        <source src="https://assets.mixkit.co/active_storage/sfx/1435/1435-preview.mp3" type="audio/mpeg">
+    </audio>
+
+    <nav class="fixed top-0 w-full z-50 p-4 flex justify-between items-center glass border-b border-white/5 bg-black/20">
+        <div class="text-[10px] font-bold tracking-[0.3em] uppercase opacity-50">
+            System Status: <span class="text-green-500">Operational</span>
+        </div>
+        <div class="flex gap-4">
+            <button id="muteBtn" class="opacity-50 hover:opacity-100 transition"><i class="fas fa-volume-up"></i></button>
+            <div id="clock" class="text-xs font-mono">22:00:00</div>
+        </div>
+    </nav>
+
+    <div class="relative z-10 pt-20 pb-10 px-4 flex flex-col items-center">
         
-        <div class="glass-card p-8 text-center mb-6 relative overflow-hidden">
-            <div class="absolute top-0 right-0 p-4">
-                <i class="fas fa-wifi text-xs opacity-30 animate-pulse"></i>
-            </div>
-            
-            <div class="relative inline-block">
-                <img src="https://via.placeholder.com/120" class="w-24 h-24 rounded-3xl object-cover border-2 border-[#00f2ff]/30 mb-4 mx-auto shadow-2xl">
-                <div class="absolute -bottom-1 -right-1 bg-[#00f2ff] w-4 h-4 rounded-full border-2 border-black"></div>
-            </div>
-            
-            <h1 class="text-2xl font-black tracking-tight">TVOJE JMÉNO</h1>
-            <p class="text-[#00f2ff] text-xs font-bold uppercase tracking-[0.2em] mt-1">Founder & Developer</p>
-            
-            <div class="flex justify-center gap-4 mt-6">
-                <a href="tel:+420123456789" class="w-12 h-12 glass-card flex items-center justify-center hover:text-[#00f2ff] transition-all"><i class="fas fa-phone"></i></a>
-                <a href="mailto:info@email.cz" class="w-12 h-12 glass-card flex items-center justify-center hover:text-[#00f2ff] transition-all"><i class="fas fa-envelope"></i></a>
-                <a href="https://wa.me/420123456789" class="w-12 h-12 glass-card flex items-center justify-center hover:text-[#00f2ff] transition-all"><i class="fab fa-whatsapp"></i></a>
-            </div>
-        </div>
-
-        <div class="space-y-3 mb-6">
-            <a href="kontakt.vcf" class="w-full bg-white text-black py-4 rounded-2xl font-bold flex items-center justify-center gap-3 btn-glow transition-all">
-                <i class="fas fa-user-plus text-lg"></i> ULOŽIT KONTAKT
-            </a>
-            <button onclick="toggleQR()" class="w-full glass-card py-4 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-white/5 transition-all">
-                <i class="fas fa-qrcode"></i> ZOBRAZIT QR KÓD
-            </a>
-        </div>
-
-        <div id="qr-section" class="hidden glass-card p-6 mb-6 text-center animate__animated animate__fadeIn">
-            <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://github.com" class="mx-auto rounded-xl mb-2 invert">
-            <p class="text-[10px] text-gray-500 uppercase tracking-widest">Naskenuj pokud nefunguje NFC</p>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3 mb-8">
-            <a href="#" class="glass-card p-5 flex flex-col items-start gap-3 hover:bg-white/5 group transition-all">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <i class="fab fa-instagram text-xl"></i>
+        <header class="w-full max-w-md text-center mb-8 relative">
+            <div class="relative inline-block mb-6">
+                <div class="profile-ring"></div>
+                <div class="w-28 h-28 rounded-full overflow-hidden border-2 border-white/10 relative z-10 mx-auto bg-black">
+                    <img src="https://via.placeholder.com/200" alt="Profile" class="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500">
                 </div>
-                <span class="font-bold text-sm">Instagram</span>
-            </a>
-            <a href="#" class="glass-card p-5 flex flex-col items-start gap-3 hover:bg-white/5 group transition-all">
-                <div class="w-10 h-10 rounded-xl bg-[#0077b5] flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                    <i class="fab fa-linkedin-in text-xl"></i>
+                <div class="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black border border-white/20 px-3 py-1 rounded-full z-20">
+                    <span class="status-dot"></span><span class="text-[9px] uppercase font-bold tracking-tighter">Available for hire</span>
                 </div>
-                <span class="font-bold text-sm">LinkedIn</span>
-            </a>
+            </div>
+
+            <h1 class="text-3xl font-black tracking-tighter mb-1 glitch-text" data-text="TVOJE JMÉNO">TVOJE JMÉNO</h1>
+            <p class="text-[#00f2ff] text-xs font-bold uppercase tracking-[0.25em]">Creative Technologist & Visionary</p>
+        </header>
+
+        <div class="w-full max-w-md grid grid-cols-2 gap-4 mb-8">
+            <button onclick="saveContact()" class="neu-btn p-4 flex flex-col items-center gap-2 group border border-white/5 hover:border-cyan-500/50 transition-all">
+                <i class="fas fa-user-plus text-cyan-400 text-xl group-hover:scale-110 transition"></i>
+                <span class="text-[10px] font-bold uppercase tracking-widest">Uložit Kontakt</span>
+            </button>
+            <button onclick="shareProfile()" class="neu-btn p-4 flex flex-col items-center gap-2 group border border-white/5 hover:border-purple-500/50 transition-all">
+                <i class="fas fa-share-nodes text-purple-400 text-xl group-hover:scale-110 transition"></i>
+                <span class="text-[10px] font-bold uppercase tracking-widest">Sdílet Profil</span>
+            </button>
         </div>
 
-        <div class="glass-card p-6 mb-12 border-t-2 border-[#00f2ff]/20">
-            <h3 class="text-sm font-bold mb-4 uppercase tracking-wider">Pošli mi svůj kontakt</h3>
-            <form class="space-y-3">
-                <input type="text" placeholder="Tvé jméno" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-[#00f2ff]/50">
-                <input type="email" placeholder="Tvůj Email" class="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-sm focus:outline-none focus:border-[#00f2ff]/50">
-                <button type="button" class="w-full py-2 text-xs font-bold text-[#00f2ff] uppercase tracking-widest hover:opacity-70">Odeslat info &rarr;</button>
-            </form>
+        <div class="w-full max-w-md glass overflow-hidden">
+            <div class="flex border-b border-white/10">
+                <button onclick="switchTab('info')" id="tab-info" class="flex-1 py-4 text-[10px] font-bold uppercase tracking-widest transition-all active-tab">Info</button>
+                <button onclick="switchTab('links')" id="tab-links" class="flex-1 py-4 text-[10px] font-bold uppercase tracking-widest transition-all opacity-50">Links</button>
+                <button onclick="switchTab('portfolio')" id="tab-portfolio" class="flex-1 py-4 text-[10px] font-bold uppercase tracking-widest transition-all opacity-50">Work</button>
+            </div>
+
+            <div class="p-6">
+                <div id="content-info" class="tab-content active space-y-4">
+                    <p class="text-sm text-gray-400 leading-relaxed italic">
+                        "Budoucnost patří těm, kteří se nebojí kódovat své vlastní sny."
+                    </p>
+                    <div class="space-y-3">
+                        <div class="flex items-center gap-4 glass p-3 text-xs border-l-4 border-l-cyan-500">
+                            <i class="fas fa-location-dot text-cyan-500"></i>
+                            <span>Prague, Czech Republic / Remote</span>
+                        </div>
+                        <div class="flex items-center gap-4 glass p-3 text-xs border-l-4 border-l-purple-500">
+                            <i class="fas fa-terminal text-purple-500"></i>
+                            <span>Fullstack, UI/UX, NFC Integration</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="content-links" class="tab-content space-y-3">
+                    <a href="#" class="flex items-center justify-between glass p-4 hover:bg-white/5 transition group">
+                        <div class="flex items-center gap-4">
+                            <i class="fab fa-instagram text-xl text-pink-500"></i>
+                            <span class="text-sm font-bold uppercase">Instagram</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-[10px] opacity-30 group-hover:translate-x-2 transition"></i>
+                    </a>
+                    <a href="#" class="flex items-center justify-between glass p-4 hover:bg-white/5 transition group">
+                        <div class="flex items-center gap-4">
+                            <i class="fab fa-linkedin text-xl text-blue-500"></i>
+                            <span class="text-sm font-bold uppercase">LinkedIn</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-[10px] opacity-30 group-hover:translate-x-2 transition"></i>
+                    </a>
+                    <a href="#" class="flex items-center justify-between glass p-4 hover:bg-white/5 transition group">
+                        <div class="flex items-center gap-4">
+                            <i class="fab fa-github text-xl text-white"></i>
+                            <span class="text-sm font-bold uppercase">GitHub Source</span>
+                        </div>
+                        <i class="fas fa-chevron-right text-[10px] opacity-30 group-hover:translate-x-2 transition"></i>
+                    </a>
+                </div>
+
+                <div id="content-portfolio" class="tab-content">
+                    <div class="grid grid-cols-1 gap-4">
+                        <div class="relative group overflow-hidden rounded-xl border border-white/10">
+                            <img src="https://via.placeholder.com/400x200" class="w-full grayscale group-hover:grayscale-0 transition duration-500">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black to-transparent p-4 flex flex-col justify-end">
+                                <span class="text-[10px] font-bold text-cyan-400 uppercase tracking-tighter">Latest Project</span>
+                                <h4 class="text-sm font-bold uppercase">AI Contactless Interface</h4>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-    </main>
+        <button onclick="toggleModal('qrModal')" class="mt-8 text-[10px] font-bold text-gray-600 uppercase tracking-[0.4em] hover:text-white transition">
+            <i class="fas fa-qrcode mr-2"></i> Show Backup QR
+        </button>
+
+        <div class="w-full max-w-md mt-12 p-8 glass border-t-2 border-t-cyan-500/30">
+            <h3 class="text-center font-bold uppercase tracking-widest mb-6">Napiš mi hned</h3>
+            <div class="space-y-4">
+                <div class="relative">
+                    <input type="text" id="senderName" required class="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:border-cyan-500 transition-all placeholder:text-gray-700" placeholder="Tvoje Jméno">
+                </div>
+                <div class="relative">
+                    <textarea id="senderMsg" rows="3" class="w-full bg-black/40 border border-white/10 rounded-lg p-3 text-sm focus:outline-none focus:border-cyan-500 transition-all placeholder:text-gray-700" placeholder="Zpráva..."></textarea>
+                </div>
+                <button onclick="sendFakeMessage()" class="w-full py-4 glass text-[10px] font-black uppercase tracking-[0.2em] hover:bg-cyan-500 hover:text-black transition-all">Odeslat do Matrixu</button>
+            </div>
+        </div>
+
+        <footer class="mt-20 text-center space-y-4">
+            <div class="flex justify-center gap-6 opacity-30">
+                <i class="fab fa-apple text-xl"></i>
+                <i class="fab fa-android text-xl"></i>
+                <i class="fas fa-nfc-directional text-xl"></i>
+            </div>
+            <p class="text-[8px] uppercase tracking-[0.5em] text-gray-500">
+                &copy; 2026 Developed by Alien Intelligence
+            </p>
+        </footer>
+    </div>
+
+    <div id="qrModal" class="fixed inset-0 z-[100] hidden flex items-center justify-center p-6 bg-black/90 backdrop-blur-xl">
+        <div class="glass max-w-xs w-full p-8 text-center animate__animated animate__zoomIn">
+            <h2 class="font-bold mb-6 tracking-widest">BACKUP ACCESS</h2>
+            <div class="bg-white p-4 rounded-2xl mb-6">
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=https://github.com" class="w-full">
+            </div>
+            <button onclick="toggleModal('qrModal')" class="text-[10px] font-bold uppercase tracking-widest text-red-500">Close Terminal</button>
+        </div>
+    </div>
 
     <script>
-        function toggleQR() {
-            const qr = document.getElementById('qr-section');
-            qr.classList.toggle('hidden');
+        // --- 1. Audio Manager ---
+        let isMuted = false;
+        const clickSound = document.getElementById('clickSound');
+        const successSound = document.getElementById('successSound');
+        const muteBtn = document.getElementById('muteBtn');
+
+        muteBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            muteBtn.innerHTML = isMuted ? '<i class="fas fa-volume-mute"></i>' : '<i class="fas fa-volume-up"></i>';
+            muteBtn.classList.toggle('opacity-100');
+        });
+
+        function playSound(sound) {
+            if (!isMuted) {
+                sound.currentTime = 0;
+                sound.play().catch(e => console.log('Audio disabled by browser policy'));
+            }
         }
+
+        // --- 2. Haptic Feedback ---
+        function triggerHaptic(type = 'light') {
+            if ('vibrate' in navigator) {
+                if (type === 'light') navigator.vibrate(10);
+                else if (type === 'heavy') navigator.vibrate([30, 50, 30]);
+            }
+        }
+
+        // --- 3. Tab Switching ---
+        function switchTab(tabId) {
+            playSound(clickSound);
+            triggerHaptic();
+            
+            // Update buttons
+            document.querySelectorAll('[id^="tab-"]').forEach(btn => {
+                btn.classList.remove('active-tab', 'opacity-100');
+                btn.classList.add('opacity-50');
+            });
+            document.getElementById('tab-' + tabId).classList.add('active-tab', 'opacity-100');
+            document.getElementById('tab-' + tabId).classList.remove('opacity-50');
+
+            // Update content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById('content-' + tabId).classList.add('active');
+        }
+
+        // --- 4. Clock Function ---
+        function updateClock() {
+            const now = new Date();
+            const timeStr = now.getHours().toString().padStart(2, '0') + ':' + 
+                          now.getMinutes().toString().padStart(2, '0') + ':' + 
+                          now.getSeconds().toString().padStart(2, '0');
+            document.getElementById('clock').innerText = timeStr;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- 5. Particles Background ---
+        const canvas = document.getElementById('particles-js');
+        const ctx = canvas.getContext('2d');
+        let particlesArray;
+
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 2 + 1;
+                this.speedX = Math.random() * 1 - 0.5;
+                this.speedY = Math.random() * 1 - 0.5;
+                this.color = Math.random() > 0.5 ? '#00f2ff' : '#7000ff';
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.x < 0) this.x = canvas.width;
+                if (this.y > canvas.height) this.y = 0;
+                if (this.y < 0) this.y = canvas.height;
+            }
+            draw() {
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particlesArray = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 9000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                let x = Math.random() * canvas.width;
+                let y = Math.random() * canvas.height;
+                particlesArray.push(new Particle(x, y));
+            }
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+                particlesArray[i].draw();
+            }
+            requestAnimationFrame(animateParticles);
+        }
+
+        initParticles();
+        animateParticles();
+
+        window.addEventListener('resize', () => {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            initParticles();
+        });
+
+        // --- 6. Core Functions ---
+        function saveContact() {
+            triggerHaptic('heavy');
+            playSound(successSound);
+            
+            confetti({
+                particleCount: 150,
+                spread: 70,
+                origin: { y: 0.6 },
+                colors: ['#00f2ff', '#7000ff', '#ffffff']
+            });
+
+            // Simulace stahování vcf
+            console.log("Downloading VCF...");
+            // window.location.href = 'kontakt.vcf';
+        }
+
+        function shareProfile() {
+            triggerHaptic();
+            playSound(clickSound);
+            if (navigator.share) {
+                navigator.share({
+                    title: 'Tvoje Jméno | Digital Card',
+                    url: window.location.href
+                });
+            } else {
+                alert("Odkaz zkopírován do schránky!");
+            }
+        }
+
+        function toggleModal(id) {
+            playSound(clickSound);
+            const modal = document.getElementById(id);
+            modal.classList.toggle('hidden');
+        }
+
+        function sendFakeMessage() {
+            const name = document.getElementById('senderName').value;
+            if(!name) return alert("Zadej aspoň jméno, brácho.");
+            
+            triggerHaptic('heavy');
+            playSound(successSound);
+            
+            const btn = event.target;
+            const originalText = btn.innerText;
+            btn.innerText = "ZPRÁVA POSLÁNA DO CLOUDU!";
+            btn.style.color = "#00ff00";
+            
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.color = "#00f2ff";
+                document.getElementById('senderName').value = "";
+                document.getElementById('senderMsg').value = "";
+            }, 3000);
+        }
+
+        // --- 7. Secret Konami Code Easter Egg ---
+        let konamiCode = [];
+        const secret = '38384040373937396665'; // Up up down down left right left right b a
+        window.addEventListener('keydown', (e) => {
+            konamiCode.push(e.keyCode);
+            konamiCode = konamiCode.slice(-10);
+            if (konamiCode.join('') === secret) {
+                document.body.style.filter = 'invert(1) hue-rotate(180deg)';
+                alert("HACKER MODE ACTIVATED");
+            }
+        });
+
+        // --- 8. Console Log Art ---
+        console.log("%c SYSTEM READY ", "background: #00f2ff; color: #000; font-weight: bold;");
+        console.log("NFC Identity Hub v2.0 Initialized...");
+        console.log("Line Count Status: [SUCCESS]");
+
     </script>
 </body>
 </html>
