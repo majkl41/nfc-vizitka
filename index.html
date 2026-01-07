@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { 
   Plus, Settings, X, 
   Download, Share2, Edit2, Globe, Check,
-  Instagram, Facebook, Youtube, Linkedin, Twitter, Music
+  Instagram, Facebook, Youtube, Linkedin, Twitter, Music, Github
 } from 'lucide-react';
 
 const App = () => {
@@ -33,6 +33,14 @@ const App = () => {
       placeholder: 'linkedin.com/in/tvoje_jmeno' 
     },
     { 
+      id: 'github', 
+      name: 'GitHub', 
+      color: 'bg-[#24292e]', 
+      logo: 'https://unavatar.io/github.com', 
+      fallbackIcon: <Github size={32} />,
+      placeholder: 'github.com/tvoje_jmeno' 
+    },
+    { 
       id: 'facebook', 
       name: 'Facebook', 
       color: 'bg-[#1877F2]', 
@@ -59,7 +67,7 @@ const App = () => {
     { 
       id: 'spotify', 
       name: 'Spotify', 
-      color: 'bg-[#1ed760]', // Aktualizovaná žiarivejšia zelená
+      color: 'bg-[#1ed760]', 
       logo: 'https://unavatar.io/spotify.com', 
       fallbackIcon: <Music size={32} />,
       placeholder: 'open.spotify.com/user/...' 
@@ -83,7 +91,7 @@ const App = () => {
 
   const [links, setLinks] = useState([
     { id: '1', platformId: 'instagram', name: 'Instagram', url: 'https://instagram.com' },
-    { id: '2', platformId: 'tiktok', name: 'TikTok', url: 'https://tiktok.com' },
+    { id: '2', platformId: 'github', name: 'GitHub', url: 'https://github.com' },
     { id: '3', platformId: 'linkedin', name: 'LinkedIn', url: 'https://linkedin.com' },
     { id: '4', platformId: 'web', name: 'Můj Web', url: 'https://google.com' }
   ]);
@@ -223,7 +231,7 @@ const App = () => {
             <div className="space-y-6">
               <div className="space-y-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase ml-1">Vyber platformu</label>
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-3 sm:grid-cols-4 gap-3">
                   {platforms.map((p) => (
                     <button
                       key={p.id}
