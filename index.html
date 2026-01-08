@@ -56,23 +56,37 @@
 <body>
     <div id="root"></div>
 
-    <!-- Firebase SDK - Bezpečné načtení -->
+    <!-- Firebase SDK - PŘIPRAVENO PRO DATABÁZI -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, doc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-        // Bezpečné načtení konfigurace
+        // TADY JE TO MÍSTO PRO TVOU DATABÁZI
+        // Pokud to nechat na GitHubu, musíš sem dát svoje údaje, jinak se recenze neuloží!
         let firebaseConfig = null;
-        let isFirebaseAvailable = false;
+        
+        // Zkusíme načíst config, pokud existuje (v editoru), jinak použijeme placeholder
+        if (typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+        } else {
+            // PRO GITHUB: TOTO MUSÍŠ PŘEPSAT SVÝMI ÚDAJI Z FIREBASE
+            firebaseConfig = {
+                apiKey: "SEM_PATRI_API_KEY",
+                authDomain: "SEM_PATRI_PROJECT_ID.firebaseapp.com",
+                projectId: "SEM_PATRI_PROJECT_ID",
+                storageBucket: "SEM_PATRI_PROJECT_ID.firebasestorage.app",
+                messagingSenderId: "SEM_PATRI_SENDER_ID",
+                appId: "SEM_PATRI_APP_ID"
+            };
+        }
+
         let app, auth, db, appId;
+        let isFirebaseAvailable = false;
 
         try {
-            if (typeof __firebase_config !== 'undefined') {
-                firebaseConfig = JSON.parse(__firebase_config);
-            }
-            
-            if (firebaseConfig && firebaseConfig.apiKey && firebaseConfig.apiKey !== "API_KEY_Z_FIREBASE") {
+            // Inicializace jen pokud máme klíč (nebo v editoru)
+            if (firebaseConfig && (firebaseConfig.apiKey !== "SEM_PATRI_API_KEY" || typeof __firebase_config !== 'undefined')) {
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
@@ -80,22 +94,10 @@
                 isFirebaseAvailable = true;
             }
         } catch (e) {
-            console.log("Běžím v offline režimu.");
+            console.log("Chyba Firebase: ", e);
         }
 
-        window.firebaseData = { 
-            auth, 
-            db, 
-            appId, 
-            collection, 
-            addDoc, 
-            onSnapshot, 
-            query, 
-            doc, 
-            signInAnonymously, 
-            signInWithCustomToken, 
-            isFirebaseAvailable 
-        };
+        window.firebaseData = { auth, db, appId, collection, addDoc, onSnapshot, query, doc, signInAnonymously, signInWithCustomToken, isFirebaseAvailable };
     </script>
 
     <script type="text/babel">
@@ -118,13 +120,7 @@
         const App = () => {
             const [isEditMode, setIsEditMode] = useState(false);
             const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-            
-            // Načtení recenzí z LocalStorage (pro fungování bez databáze)
-            const [reviews, setReviews] = useState(() => {
-                const saved = localStorage.getItem('my_nfc_reviews');
-                return saved ? JSON.parse(saved) : [];
-            });
-            
+            const [reviews, setReviews] = useState([]);
             const [user, setUser] = useState(null);
             const [newReview, setNewReview] = useState({ name: '', text: '', rating: 5 });
 
@@ -181,11 +177,6 @@
                 };
             }, [reviews]);
 
-            // Ukládání recenzí do LocalStorage (pro offline funkčnost)
-            useEffect(() => {
-                localStorage.setItem('my_nfc_reviews', JSON.stringify(reviews));
-            }, [reviews]);
-
             useEffect(() => {
                 const initFirebase = async () => {
                     const { auth, db, appId, collection, onSnapshot, signInAnonymously, signInWithCustomToken, isFirebaseAvailable } = window.firebaseData;
@@ -211,42 +202,44 @@
                             }
                         });
                     } catch (e) {
-                        console.log("Firebase není dostupný, používám lokální data.");
+                        console.log("Firebase není připojen.");
                     }
                 };
                 initFirebase();
             }, []);
 
-            // OPRAVENÁ FUNKCE PRO ODESÍLÁNÍ
-            const submitReview = async () => {
-                // Žádné e.preventDefault(), protože to nevoláme přes onSubmit formuláře
+            // FUNKCE ODESLÁNÍ - PŘIPRAVENÁ NA DATABÁZI
+            const submitReview = async (e) => {
+                // Toto tlačítko je typu 'button', takže e může být undefined, ale pro jistotu:
+                if(e) e.preventDefault(); 
                 
                 if (!newReview.name || !newReview.text) return;
 
                 const reviewObject = { 
                     ...newReview, 
-                    id: Date.now().toString(), 
                     timestamp: new Date().getTime() 
                 };
 
-                // 1. Okamžitě uložit do stavu (zobrazí se hned na obrazovce)
-                setReviews(prev => [reviewObject, ...prev]);
-
-                // 2. Reset formuláře a zavření okna
+                const { db, appId, collection, addDoc, isFirebaseAvailable } = window.firebaseData;
+                
+                // Optimistický update (aby uživatel viděl výsledek hned)
+                setReviews(prev => [{...reviewObject, id: 'temp-' + Date.now()}, ...prev]);
+                
+                // Zavřít okno
                 setNewReview({ name: '', text: '', rating: 5 });
                 setIsReviewModalOpen(false);
 
-                // 3. Pokus o uložení do databáze (pokud je připojená)
-                const { db, appId, collection, addDoc, isFirebaseAvailable } = window.firebaseData;
+                // Odeslání do databáze
                 if (isFirebaseAvailable && db) {
                     try {
                         const reviewsPath = collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
-                        const docData = { ...reviewObject };
-                        delete docData.id; // DB si vytvoří vlastní ID
-                        await addDoc(reviewsPath, docData);
+                        await addDoc(reviewsPath, reviewObject);
                     } catch (error) {
-                        console.error("Chyba odeslání do DB (nevadí, uloženo lokálně):", error);
+                        console.error("Chyba odeslání do DB:", error);
+                        // Tady by se normálně zobrazila chyba uživateli
                     }
+                } else {
+                    console.warn("Recenze nebyla uložena trvale - chybí konfigurace Firebase!");
                 }
             };
 
@@ -294,7 +287,6 @@
                 setImgErrors(prev => ({ ...prev, [id]: true }));
             };
 
-            // Validace pro tlačítko
             const isFormValid = newReview.name.trim().length > 0 && newReview.text.trim().length > 0;
 
             return (
@@ -330,7 +322,7 @@
                             <p className="text-[11px] font-bold text-blue-600 uppercase tracking-[0.2em]">{profile.title}</p>
                             <p className="text-slate-400 text-sm px-4 pt-2 leading-relaxed font-medium italic">"{profile.bio}"</p>
                             
-                            {/* KONTAKTNÍ TLAČÍTKA - SVĚTLÁ BARVA */}
+                            {/* KONTAKTNÍ TLAČÍTKA - ZPĚT NA SLATE-50 (Šedá) */}
                             <div className="flex flex-col gap-3 pt-5 px-2 w-full">
                                 {profile.email && (
                                     <a 
@@ -375,7 +367,7 @@
                             </div>
                         </div>
 
-                        {/* DASHBOARD RECENZÍ - ZPĚT NA SLATE-50 */}
+                        {/* DASHBOARD RECENZÍ - ZPĚT NA SLATE-50 (Šedá) */}
                         <div className="px-8 pt-4 pb-4 space-y-6">
                             <div className="bg-slate-50 rounded-[2.5rem] p-6 border border-slate-100 shadow-sm space-y-5">
                                 <div className="flex justify-between items-end">
@@ -401,7 +393,7 @@
                                                 <div key={i} className="flex items-center gap-2">
                                                     <span className="text-[8px] font-bold text-slate-400 w-3 text-right">{5-i}</span>
                                                     <div className="flex-1 h-1 bg-slate-200 rounded-full overflow-hidden">
-                                                        <div className="h-full bg-amber-400 progress-bar-fill" style={{ width: `${percent}%` }}></div>
+                                                        <div className="h-full bg-slate-800 progress-bar-fill" style={{ width: `${percent}%` }}></div>
                                                     </div>
                                                 </div>
                                             );
@@ -450,7 +442,7 @@
                         </div>
                     </div>
 
-                    {/* MODÁL PRO DOKONČENÍ RECENZE (Žluté hvězdy) */}
+                    {/* MODÁL PRO DOKONČENÍ RECENZE (Žluté hvězdy jsou zpět) */}
                     {isReviewModalOpen && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-md">
                             <div className="bg-white rounded-[3.5rem] w-full max-w-md p-6 sm:p-10 shadow-2xl animate-in zoom-in-95 duration-200 modal-content overflow-y-auto">
@@ -458,8 +450,7 @@
                                     <h3 className="text-xl font-black uppercase text-slate-800 tracking-tight">Odeslat hodnocení</h3>
                                     <button onClick={() => setIsReviewModalOpen(false)} className="p-3 bg-slate-100 rounded-full text-slate-400 hover:text-red-500 active:scale-90"><Icon name="X" size={24} /></button>
                                 </div>
-                                {/* ODSTRANĚN FORM TAG - PŘÍMÉ VOLÁNÍ FUNKCE */}
-                                <div className="space-y-6 text-center">
+                                <form className="space-y-6 text-center">
                                     <div className="space-y-4 bg-slate-50 p-4 sm:p-6 rounded-3xl border border-slate-100">
                                         <div className="flex justify-center gap-2 mb-2">
                                             {[1, 2, 3, 4, 5].map(num => (
@@ -499,7 +490,7 @@
                                     >
                                         Odeslat hodnocení
                                     </button>
-                                </div>
+                                </form>
                             </div>
                         </div>
                     )}
