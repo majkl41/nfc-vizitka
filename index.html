@@ -66,8 +66,14 @@
         
         const Icon = ({ name, size = 24, className = "", fill = "none" }) => {
             const lib = window.lucideReact || window.LucideReact || window.lucide || {};
-            const LucideIcon = lib[name] || lib.Link || lib.Globe;
-            if (!LucideIcon) return <span className="text-xs">★</span>;
+            const LucideIcon = lib[name];
+            
+            if (!LucideIcon) {
+                if (name === "X") return <span style={{fontSize: size + 'px', lineHeight: 1, fontWeight: 'bold'}}>✕</span>;
+                if (name === "Star") return <span style={{fontSize: size + 'px', lineHeight: 1, color: className.includes('amber') ? '#fbbf24' : '#e5e7eb'}}>★</span>;
+                return null;
+            }
+            
             return <LucideIcon size={size} className={className} fill={fill} />;
         };
 
@@ -141,11 +147,12 @@
                         setUser(u);
                         if (u) {
                             const reviewsPath = collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
-                            onSnapshot(reviewsPath, (snapshot) => {
+                            const unsubscribe = onSnapshot(reviewsPath, (snapshot) => {
                                 const loadedReviews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                                loadedReviews.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                                loadedReviews.sort((a, b) => b.timestamp - a.timestamp);
                                 setReviews(loadedReviews);
                             });
+                            return () => unsubscribe();
                         }
                     });
                 };
@@ -219,9 +226,10 @@
 
                     <div className="w-full max-w-[390px] bg-white sm:rounded-[3.5rem] shadow-2xl overflow-hidden min-h-screen sm:min-h-0 flex flex-col border border-slate-100 relative pb-10">
                         
+                        {/* Header s fotkou */}
                         <div className="h-32 bg-slate-900 relative">
                             <div className="absolute -bottom-14 left-1/2 -translate-x-1/2">
-                                <div className={`relative group ${isEditMode ? 'cursor-pointer' : ''}`} onClick={() => isEditMode && setIsEditingProfile(true)}>
+                                <div className={`relative group ${isEditMode ? 'cursor-pointer active:scale-95' : 'cursor-default'}`} onClick={() => isEditMode && setIsEditingProfile(true)}>
                                     <img src={profile.avatar} className="w-28 h-28 rounded-[2.5rem] object-cover border-[6px] border-white shadow-xl bg-slate-200" alt="Profil" />
                                     {isEditMode && <div className="absolute -bottom-1 -right-1 p-2 bg-blue-600 rounded-full shadow-lg text-white border-2 border-white"><Icon name="Settings" size={16} /></div>}
                                 </div>
@@ -241,7 +249,7 @@
                                     return (
                                         <div key={link.id} className="relative group">
                                             <button onClick={() => isEditMode ? openEdit(index) : handleLinkClick(link)} className={`w-full aspect-square flex flex-col items-center justify-center gap-3 p-5 rounded-[2.8rem] transition-all duration-500 relative overflow-hidden ${style.color} ${!isEditMode ? 'hover:scale-[1.05]' : 'hover:-translate-y-1 ring-2 ring-transparent hover:ring-white/50'}`}>
-                                                <div className="relative z-10 w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-md p-3">
+                                                <div className="relative z-10 w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-md p-3 transition-transform duration-500 group-hover:scale-110">
                                                     {link.customIconUrl ? <img src={link.customIconUrl} className="w-full h-full object-contain" /> : style.logo ? <img src={style.logo} className="w-full h-full object-contain" /> : <div className="text-slate-400"><Icon name={style.fallbackIcon} size={32} /></div>}
                                                 </div>
                                                 <span className={`text-[10px] font-black uppercase tracking-[0.1em] z-10 truncate w-full px-1 ${link.platformId === 'snapchat' ? 'text-black' : 'text-white'}`}>{link.name}</span>
@@ -253,7 +261,7 @@
                             </div>
                         </div>
 
-                        {/* DASHBOARD RECENZÍ */}
+                        {/* DASHBOARD RECENZÍ - ZJEDNODUŠENO (Bez hvězd k volbě) */}
                         <div className="px-8 pt-4 pb-4 space-y-6">
                             <div className="bg-slate-50/80 rounded-[2.5rem] p-6 border border-slate-100 shadow-inner space-y-5">
                                 <div className="flex justify-between items-end">
@@ -284,21 +292,6 @@
                                                 </div>
                                             );
                                         })}
-                                    </div>
-                                </div>
-
-                                {/* RUČNÍ VOLBA HVĚZD */}
-                                <div className="pt-4 border-t border-slate-200 text-center">
-                                    <div className="flex justify-center gap-2">
-                                        {[1, 2, 3, 4, 5].map(num => (
-                                            <button 
-                                                key={num} 
-                                                onClick={() => { setNewReview({...newReview, rating: num}); !isEditMode && setIsReviewModalOpen(true); }}
-                                                className={`star-button group p-1 ${newReview.rating >= num ? 'text-amber-400' : 'text-slate-200'}`}
-                                            >
-                                                <Icon name="Star" size={44} className="group-hover:text-amber-400 transition-colors" fill={newReview.rating >= num ? "currentColor" : "none"} />
-                                            </button>
-                                        ))}
                                     </div>
                                 </div>
                             </div>
@@ -343,7 +336,7 @@
                         </div>
                     </div>
 
-                    {/* MODÁL PRO DOKONČENÍ RECENZE */}
+                    {/* MODÁL PRO DOKONČENÍ RECENZE (Velké hvězdy uvnitř) */}
                     {isReviewModalOpen && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-md">
                             <div className="bg-white rounded-[3.5rem] w-full max-w-md p-10 shadow-2xl animate-in zoom-in-95 duration-200">
@@ -361,7 +354,7 @@
                                                     onClick={() => setNewReview({...newReview, rating: num})} 
                                                     className={`star-button transform ${newReview.rating >= num ? 'text-amber-400 scale-110' : 'text-slate-200'}`}
                                                 >
-                                                    <Icon name="Star" size={56} className={newReview.rating >= num ? "fill-amber-400" : ""} fill={newReview.rating >= num ? "currentColor" : "none"} />
+                                                    <Icon name="Star" size={64} className={newReview.rating >= num ? "fill-amber-400" : ""} fill={newReview.rating >= num ? "currentColor" : "none"} />
                                                 </button>
                                             ))}
                                         </div>
@@ -383,13 +376,13 @@
                                             onChange={(e) => setNewReview({...newReview, text: e.target.value})} 
                                         />
                                     </div>
-                                    <button type="submit" className="w-full bg-amber-400 text-white font-black py-6 rounded-[2rem] uppercase tracking-widest shadow-2xl active:scale-95 transition-all text-white shadow-amber-200">Odeslat recenzi</button>
+                                    <button type="submit" className="w-full bg-amber-400 text-white font-black py-6 rounded-[2rem] uppercase tracking-widest shadow-2xl active:scale-95 transition-all text-white shadow-amber-200">Odeslat hodnocení</button>
                                 </form>
                             </div>
                         </div>
                     )}
 
-                    {/* EDITORY (Odkazy & Profil) - ZACHOVÁNO */}
+                    {/* EDITORY (Odkazy & Profil) */}
                     {editingIndex !== null && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/90 backdrop-blur-md">
                             <div className="bg-white rounded-[3.5rem] w-full max-w-md p-10 shadow-2xl overflow-y-auto max-h-[90vh]">
@@ -405,9 +398,9 @@
                                     </div>
                                     <form onSubmit={saveLink} className="space-y-5 border-t border-slate-100 pt-4 text-center">
                                         <input type="text" value={tempItem.url} onChange={(e) => setTempItem({...tempItem, url: e.target.value})} className="w-full p-5 bg-slate-50 rounded-[1.5rem] outline-none border-2 border-transparent focus:border-blue-500 font-bold" placeholder="URL nebo Číslo" />
-                                        <input type="text" value={tempItem.customIconUrl} onChange={(e) => setTempItem({...tempItem, customIconUrl: e.target.value})} className="w-full p-5 bg-slate-50 rounded-[1.5rem] outline-none border-2 border-transparent focus:border-blue-500 font-bold text-xs" placeholder="Vlastní logo URL" />
+                                        <input type="text" value={tempItem.customIconUrl} onChange={(e) => setTempItem({...tempItem, customIconUrl: e.target.value})} className="w-full p-5 bg-slate-50 rounded-[1.5rem] outline-none border-2 border-transparent focus:border-blue-500 font-bold text-xs" placeholder="Vlastní logo URL (volitelné)" />
                                         <input type="text" value={tempItem.name} onChange={(e) => setTempItem({...tempItem, name: e.target.value})} className="w-full p-5 bg-slate-50 rounded-[1.5rem] outline-none border-2 border-transparent focus:border-blue-500 font-bold" placeholder="Název" />
-                                        <button type="submit" className="w-full bg-blue-600 text-white font-black py-6 rounded-[2rem] uppercase tracking-widest shadow-xl text-white">Uložit změny</button>
+                                        <button type="submit" className="w-full bg-blue-600 text-white font-black py-6 rounded-[2rem] uppercase tracking-widest text-sm shadow-xl text-white">Uložit změny</button>
                                     </form>
                                 </div>
                             </div>
