@@ -49,20 +49,24 @@
 <body>
     <div id="root"></div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK - Ošetřeno proti pádu na GitHubu -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, doc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-        const firebaseConfig = JSON.parse(__firebase_config);
-        
-        let app, auth, db, appId;
+        // Bezpečné načtení konfigurace
+        let firebaseConfig = null;
         let isFirebaseAvailable = false;
-        
+        let app, auth, db, appId;
+
         try {
-            // Pokus o inicializaci Firebase, pokud selže, pojedeme v offline režimu
-            if (firebaseConfig && firebaseConfig.apiKey !== "API_KEY_Z_FIREBASE") {
+            if (typeof __firebase_config !== 'undefined') {
+                firebaseConfig = JSON.parse(__firebase_config);
+            }
+            
+            // Pokud máme config, inicializujeme Firebase
+            if (firebaseConfig && firebaseConfig.apiKey && firebaseConfig.apiKey !== "API_KEY_Z_FIREBASE") {
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
                 db = getFirestore(app);
@@ -70,10 +74,23 @@
                 isFirebaseAvailable = true;
             }
         } catch (e) {
-            console.log("Firebase není nakonfigurován, běžím v offline režimu.");
+            console.log("Běžím v offline režimu (bez Firebase).");
         }
 
-        window.firebaseData = { auth, db, appId, collection, addDoc, onSnapshot, query, doc, signInAnonymously, signInWithCustomToken, isFirebaseAvailable };
+        // Exponování proměnných globálně, aby k nim měl přístup React, i když jsou null
+        window.firebaseData = { 
+            auth, 
+            db, 
+            appId, 
+            collection, 
+            addDoc, 
+            onSnapshot, 
+            query, 
+            doc, 
+            signInAnonymously, 
+            signInWithCustomToken, 
+            isFirebaseAvailable 
+        };
     </script>
 
     <script type="text/babel">
@@ -86,7 +103,7 @@
             
             if (!LucideIcon) {
                 if (name === "X") return <span style={{fontSize: size + 'px', lineHeight: 1, fontWeight: 'bold'}}>✕</span>;
-                if (name === "Star") return <span style={{fontSize: size + 'px', lineHeight: 1, color: className.includes('slate-900') ? '#0f172a' : '#e5e7eb'}}>★</span>;
+                if (name === "Star") return <span style={{fontSize: size + 'px', lineHeight: 1, color: className.includes('amber') ? '#fbbf24' : '#e5e7eb'}}>★</span>;
                 return null;
             }
             
@@ -97,11 +114,11 @@
             const [isEditMode, setIsEditMode] = useState(false);
             const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
             
-            // Falešná data pro offline testování
-            const [reviews, setReviews] = useState([
-                { id: 1, name: "Petr Novák", text: "Skvělá spolupráce, doporučuji!", rating: 5, timestamp: Date.now() - 10000 },
-                { id: 2, name: "Jana D.", text: "Rychlé jednání a profi přístup.", rating: 5, timestamp: Date.now() - 20000 }
-            ]);
+            // Načtení recenzí z LocalStorage (pro fungování bez databáze)
+            const [reviews, setReviews] = useState(() => {
+                const saved = localStorage.getItem('my_nfc_reviews');
+                return saved ? JSON.parse(saved) : [];
+            });
             
             const [user, setUser] = useState(null);
             const [newReview, setNewReview] = useState({ name: '', text: '', rating: 5 });
@@ -159,56 +176,67 @@
                 };
             }, [reviews]);
 
-            // Pokus o připojení k Firebase, pokud selže, nic se neděje (offline mode)
+            // Ukládání recenzí do LocalStorage při změně (pro offline funkčnost)
             useEffect(() => {
+                localStorage.setItem('my_nfc_reviews', JSON.stringify(reviews));
+            }, [reviews]);
+
+            useEffect(() => {
+                // Pokus o připojení k Firebase (pokud existuje config)
                 const initFirebase = async () => {
                     const { auth, db, appId, collection, onSnapshot, signInAnonymously, signInWithCustomToken, isFirebaseAvailable } = window.firebaseData;
                     
                     if (!isFirebaseAvailable) return;
 
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                    auth.onAuthStateChanged((u) => {
-                        setUser(u);
-                        if (u) {
-                            const reviewsPath = collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
-                            const unsubscribe = onSnapshot(reviewsPath, (snapshot) => {
-                                const loadedReviews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                                loadedReviews.sort((a, b) => b.timestamp - a.timestamp);
-                                setReviews(loadedReviews);
-                            });
-                            return () => unsubscribe();
+                    try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(auth);
                         }
-                    });
+                        auth.onAuthStateChanged((u) => {
+                            setUser(u);
+                            if (u) {
+                                const reviewsPath = collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
+                                const unsubscribe = onSnapshot(reviewsPath, (snapshot) => {
+                                    const loadedReviews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                                    loadedReviews.sort((a, b) => b.timestamp - a.timestamp);
+                                    setReviews(loadedReviews); // Přepíše lokální, pokud je DB dostupná
+                                });
+                                return () => unsubscribe();
+                            }
+                        });
+                    } catch (e) {
+                        console.log("Firebase není dostupný, používám lokální data.");
+                    }
                 };
                 initFirebase();
             }, []);
 
-            // Funkce pro odeslání recenze (Funguje i OFFLINE pro testování)
             const submitReview = async (e) => {
-                if (e) e.preventDefault(); 
+                if(e) e.preventDefault(); // Důležité: zabrání obnovení stránky
                 
                 if (!newReview.name || !newReview.text) return;
 
+                const reviewObject = { 
+                    ...newReview, 
+                    id: Date.now().toString(), // Lokální ID
+                    timestamp: new Date().getTime() 
+                };
+
                 const { db, appId, collection, addDoc, isFirebaseAvailable } = window.firebaseData;
                 
-                const reviewObject = { ...newReview, timestamp: new Date().getTime() };
+                // 1. Uložit lokálně (vždy funguje, i bez netu/db)
+                setReviews(prev => [reviewObject, ...prev]);
 
+                // 2. Pokud je DB, zkusit uložit i tam
                 if (isFirebaseAvailable && db) {
                     try {
                         const reviewsPath = collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
-                        await addDoc(reviewsPath, reviewObject);
+                        await addDoc(reviewsPath, { ...newReview, timestamp: new Date().getTime() });
                     } catch (error) {
-                        console.error("Chyba odeslání do DB:", error);
-                        // Fallback pro lokální test
-                        setReviews(prev => [reviewObject, ...prev]);
+                        console.error("Chyba odeslání do DB (nevadí, uloženo lokálně):", error);
                     }
-                } else {
-                    // Offline režim - přidáme recenzi jen lokálně do stavu
-                    setReviews(prev => [reviewObject, ...prev]);
                 }
 
                 setNewReview({ name: '', text: '', rating: 5 });
@@ -219,8 +247,12 @@
                 if (isEditMode) return;
                 let targetUrl = link.url;
                 if (!targetUrl) return;
-                const finalUrl = targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`;
-                window.open(finalUrl, '_blank');
+                if (link.platformId === 'phone') window.location.href = `tel:${targetUrl.replace(/\s/g, '')}`;
+                else if (link.platformId === 'email') window.location.href = `mailto:${targetUrl}`;
+                else {
+                    const finalUrl = targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`;
+                    window.open(finalUrl, '_blank');
+                }
             };
 
             const openEdit = (index) => {
@@ -339,7 +371,7 @@
                             </div>
                         </div>
 
-                        {/* DASHBOARD RECENZÍ - ZPĚT NA SLATE-50 */}
+                        {/* DASHBOARD RECENZÍ - SLATE-50 */}
                         <div className="px-8 pt-4 pb-4 space-y-6">
                             <div className="bg-slate-50 rounded-[2.5rem] p-6 border border-slate-100 shadow-sm space-y-5">
                                 <div className="flex justify-between items-end">
