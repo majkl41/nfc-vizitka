@@ -49,7 +49,7 @@
 <body>
     <div id="root"></div>
 
-    <!-- Firebase SDK - Ošetřeno proti pádu na GitHubu -->
+    <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
@@ -77,7 +77,6 @@
             console.log("Běžím v offline režimu (bez Firebase).");
         }
 
-        // Exponování proměnných globálně, aby k nim měl přístup React, i když jsou null
         window.firebaseData = { 
             auth, 
             db, 
@@ -103,7 +102,7 @@
             
             if (!LucideIcon) {
                 if (name === "X") return <span style={{fontSize: size + 'px', lineHeight: 1, fontWeight: 'bold'}}>✕</span>;
-                if (name === "Star") return <span style={{fontSize: size + 'px', lineHeight: 1, color: className.includes('amber') ? '#fbbf24' : '#e5e7eb'}}>★</span>;
+                if (name === "Star") return <span style={{fontSize: size + 'px', lineHeight: 1, color: className.includes('slate-900') ? '#0f172a' : '#e5e7eb'}}>★</span>;
                 return null;
             }
             
@@ -213,23 +212,22 @@
                 initFirebase();
             }, []);
 
+            // Funkce pro odeslání recenze
             const submitReview = async (e) => {
-                if(e) e.preventDefault(); // Důležité: zabrání obnovení stránky
+                if(e) e.preventDefault(); 
                 
                 if (!newReview.name || !newReview.text) return;
 
                 const reviewObject = { 
                     ...newReview, 
-                    id: Date.now().toString(), // Lokální ID
+                    id: Date.now().toString(), 
                     timestamp: new Date().getTime() 
                 };
 
                 const { db, appId, collection, addDoc, isFirebaseAvailable } = window.firebaseData;
                 
-                // 1. Uložit lokálně (vždy funguje, i bez netu/db)
                 setReviews(prev => [reviewObject, ...prev]);
 
-                // 2. Pokud je DB, zkusit uložit i tam
                 if (isFirebaseAvailable && db) {
                     try {
                         const reviewsPath = collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
@@ -247,12 +245,8 @@
                 if (isEditMode) return;
                 let targetUrl = link.url;
                 if (!targetUrl) return;
-                if (link.platformId === 'phone') window.location.href = `tel:${targetUrl.replace(/\s/g, '')}`;
-                else if (link.platformId === 'email') window.location.href = `mailto:${targetUrl}`;
-                else {
-                    const finalUrl = targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`;
-                    window.open(finalUrl, '_blank');
-                }
+                const finalUrl = targetUrl.startsWith('http') ? targetUrl : `https://${targetUrl}`;
+                window.open(finalUrl, '_blank');
             };
 
             const openEdit = (index) => {
@@ -371,7 +365,7 @@
                             </div>
                         </div>
 
-                        {/* DASHBOARD RECENZÍ - SLATE-50 */}
+                        {/* DASHBOARD RECENZÍ - ZPĚT NA SLATE-50 */}
                         <div className="px-8 pt-4 pb-4 space-y-6">
                             <div className="bg-slate-50 rounded-[2.5rem] p-6 border border-slate-100 shadow-sm space-y-5">
                                 <div className="flex justify-between items-end">
