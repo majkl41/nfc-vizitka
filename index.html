@@ -2,7 +2,7 @@
 <html lang="cs">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Moje NFC Vizitka</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -20,6 +20,7 @@
             margin: 0;
             padding: 0;
             overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
         }
         img {
             image-rendering: -webkit-optimize-contrast;
@@ -32,13 +33,17 @@
             transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
         }
         .star-button:hover {
-            transform: scale(1.25);
+            transform: scale(1.1);
         }
         .star-button:active {
             transform: scale(0.9);
         }
         .progress-bar-fill {
             transition: width 1s ease-in-out;
+        }
+        /* Oprava pro mobily - aby modál nebyl příliš vysoký */
+        .modal-content {
+            max-height: 85vh;
         }
     </style>
 </head>
@@ -208,6 +213,9 @@
                 setEditingIndex(null);
             };
 
+            // VALIDACE PRO TLAČÍTKO
+            const isFormValid = newReview.name.trim().length > 0 && newReview.text.trim().length > 0;
+
             return (
                 <div className="min-h-screen bg-slate-50 flex justify-center items-start sm:py-10 font-sans text-slate-900 relative">
                     
@@ -261,7 +269,7 @@
                             </div>
                         </div>
 
-                        {/* DASHBOARD RECENZÍ - ZJEDNODUŠENO (Bez hvězd k volbě) */}
+                        {/* DASHBOARD RECENZÍ */}
                         <div className="px-8 pt-4 pb-4 space-y-6">
                             <div className="bg-slate-50/80 rounded-[2.5rem] p-6 border border-slate-100 shadow-inner space-y-5">
                                 <div className="flex justify-between items-end">
@@ -292,6 +300,21 @@
                                                 </div>
                                             );
                                         })}
+                                    </div>
+                                </div>
+
+                                {/* RUČNÍ VOLBA HVĚZD */}
+                                <div className="pt-4 border-t border-slate-200 text-center">
+                                    <div className="flex justify-center gap-2">
+                                        {[1, 2, 3, 4, 5].map(num => (
+                                            <button 
+                                                key={num} 
+                                                onClick={() => { setNewReview({...newReview, rating: num}); !isEditMode && setIsReviewModalOpen(true); }}
+                                                className={`star-button group p-1 ${newReview.rating >= num ? 'text-amber-400' : 'text-slate-200'}`}
+                                            >
+                                                <Icon name="Star" size={44} className="group-hover:text-amber-400 transition-colors" fill={newReview.rating >= num ? "currentColor" : "none"} />
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
@@ -330,22 +353,22 @@
                                 onClick={() => !isEditMode && window.print()}
                                 className={`w-full bg-slate-900 text-white font-black py-4 rounded-[1.8rem] shadow-xl flex items-center justify-center gap-3 text-sm tracking-widest transition-all ${isEditMode ? 'opacity-30' : 'hover:bg-slate-800 active:scale-95'}`}
                             >
-                                <Icon name="Download" size={20} /> ULOŽIT KONTAKT
+                                ULOŽIT KONTAKT
                             </button>
                             <p className="text-[9px] text-slate-300 font-black uppercase tracking-[0.4em] mt-6">NFC SMART EDITOR PRO</p>
                         </div>
                     </div>
 
-                    {/* MODÁL PRO DOKONČENÍ RECENZE (Velké hvězdy uvnitř) */}
+                    {/* MODÁL PRO DOKONČENÍ RECENZE */}
                     {isReviewModalOpen && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-md">
-                            <div className="bg-white rounded-[3.5rem] w-full max-w-md p-10 shadow-2xl animate-in zoom-in-95 duration-200">
-                                <div className="flex justify-between items-center mb-8">
+                            <div className="bg-white rounded-[3.5rem] w-full max-w-md p-6 sm:p-10 shadow-2xl animate-in zoom-in-95 duration-200 modal-content overflow-y-auto">
+                                <div className="flex justify-between items-center mb-4 sm:mb-8">
                                     <h3 className="text-xl font-black uppercase text-slate-800 tracking-tight">Odeslat hodnocení</h3>
                                     <button onClick={() => setIsReviewModalOpen(false)} className="p-3 bg-slate-100 rounded-full text-slate-400 hover:text-red-500 active:scale-90"><Icon name="X" size={24} /></button>
                                 </div>
                                 <form onSubmit={submitReview} className="space-y-6 text-center">
-                                    <div className="space-y-4 bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                                    <div className="space-y-4 bg-slate-50 p-4 sm:p-6 rounded-3xl border border-slate-100">
                                         <div className="flex justify-center gap-2 mb-2">
                                             {[1, 2, 3, 4, 5].map(num => (
                                                 <button 
@@ -354,7 +377,7 @@
                                                     onClick={() => setNewReview({...newReview, rating: num})} 
                                                     className={`star-button transform ${newReview.rating >= num ? 'text-amber-400 scale-110' : 'text-slate-200'}`}
                                                 >
-                                                    <Icon name="Star" size={64} className={newReview.rating >= num ? "fill-amber-400" : ""} fill={newReview.rating >= num ? "currentColor" : "none"} />
+                                                    <Icon name="Star" size={window.innerWidth < 640 ? 44 : 64} className={newReview.rating >= num ? "fill-amber-400" : ""} fill={newReview.rating >= num ? "currentColor" : "none"} />
                                                 </button>
                                             ))}
                                         </div>
@@ -371,12 +394,18 @@
                                         <textarea 
                                             placeholder="Zde napiš svou zkušenost s podnikatelem..." 
                                             required 
-                                            className="w-full p-5 bg-slate-50 rounded-[1.5rem] outline-none border-2 border-transparent focus:border-amber-400 h-32 font-bold resize-none" 
+                                            className="w-full p-5 bg-slate-50 rounded-[1.5rem] outline-none border-2 border-transparent focus:border-amber-400 h-24 sm:h-32 font-bold resize-none" 
                                             value={newReview.text} 
                                             onChange={(e) => setNewReview({...newReview, text: e.target.value})} 
                                         />
                                     </div>
-                                    <button type="submit" className="w-full bg-amber-400 text-white font-black py-6 rounded-[2rem] uppercase tracking-widest shadow-2xl active:scale-95 transition-all text-white shadow-amber-200">Odeslat hodnocení</button>
+                                    <button 
+                                        type="submit" 
+                                        disabled={!isFormValid}
+                                        className={`w-full text-white font-black py-6 rounded-[2rem] uppercase tracking-widest shadow-2xl transition-all ${isFormValid ? 'bg-amber-400 active:scale-95 shadow-amber-200' : 'bg-slate-300 cursor-not-allowed'}`}
+                                    >
+                                        Odeslat hodnocení
+                                    </button>
                                 </form>
                             </div>
                         </div>
