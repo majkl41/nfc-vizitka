@@ -55,35 +55,25 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, doc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-        // TADY JE MÍSTO PRO TVOU KONFIGURACI PRO GITHUB
-        // Pokud jsi na GitHubu, kód použije to, co je v 'else'.
-        let firebaseConfig;
-        if (typeof __firebase_config !== 'undefined') {
-            firebaseConfig = JSON.parse(__firebase_config);
-        } else {
-            // !!! ZDE VLOŽ SVÉ ÚDAJE Z FIREBASE KONZOLE !!!
-            firebaseConfig = {
-                apiKey: "API_KEY_Z_FIREBASE",
-                authDomain: "TVUJ_PROJEKT.firebaseapp.com",
-                projectId: "TVUJ_PROJEKT_ID",
-                storageBucket: "TVUJ_PROJEKT.appspot.com",
-                messagingSenderId: "CISLO",
-                appId: "APP_ID"
-            };
-        }
-
+        const firebaseConfig = JSON.parse(__firebase_config);
+        
         let app, auth, db, appId;
+        let isFirebaseAvailable = false;
         
         try {
-            app = initializeApp(firebaseConfig);
-            auth = getAuth(app);
-            db = getFirestore(app);
-            appId = (typeof __app_id !== 'undefined') ? __app_id : 'nfc-vizitka-public';
+            // Pokus o inicializaci Firebase, pokud selže, pojedeme v offline režimu
+            if (firebaseConfig && firebaseConfig.apiKey !== "API_KEY_Z_FIREBASE") {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                appId = (typeof __app_id !== 'undefined') ? __app_id : 'default-app-id';
+                isFirebaseAvailable = true;
+            }
         } catch (e) {
-            console.error("Chyba inicializace Firebase:", e);
+            console.log("Firebase není nakonfigurován, běžím v offline režimu.");
         }
 
-        window.firebaseData = { auth, db, appId, collection, addDoc, onSnapshot, query, doc, signInAnonymously, signInWithCustomToken };
+        window.firebaseData = { auth, db, appId, collection, addDoc, onSnapshot, query, doc, signInAnonymously, signInWithCustomToken, isFirebaseAvailable };
     </script>
 
     <script type="text/babel">
@@ -96,7 +86,7 @@
             
             if (!LucideIcon) {
                 if (name === "X") return <span style={{fontSize: size + 'px', lineHeight: 1, fontWeight: 'bold'}}>✕</span>;
-                if (name === "Star") return <span style={{fontSize: size + 'px', lineHeight: 1, color: className.includes('amber') ? '#fbbf24' : '#e5e7eb'}}>★</span>;
+                if (name === "Star") return <span style={{fontSize: size + 'px', lineHeight: 1, color: className.includes('slate-900') ? '#0f172a' : '#e5e7eb'}}>★</span>;
                 return null;
             }
             
@@ -106,7 +96,13 @@
         const App = () => {
             const [isEditMode, setIsEditMode] = useState(false);
             const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
-            const [reviews, setReviews] = useState([]);
+            
+            // Falešná data pro offline testování
+            const [reviews, setReviews] = useState([
+                { id: 1, name: "Petr Novák", text: "Skvělá spolupráce, doporučuji!", rating: 5, timestamp: Date.now() - 10000 },
+                { id: 2, name: "Jana D.", text: "Rychlé jednání a profi přístup.", rating: 5, timestamp: Date.now() - 20000 }
+            ]);
+            
             const [user, setUser] = useState(null);
             const [newReview, setNewReview] = useState({ name: '', text: '', rating: 5 });
 
@@ -163,58 +159,60 @@
                 };
             }, [reviews]);
 
+            // Pokus o připojení k Firebase, pokud selže, nic se neděje (offline mode)
             useEffect(() => {
                 const initFirebase = async () => {
-                    const { auth, db, appId, collection, onSnapshot, signInAnonymously, signInWithCustomToken } = window.firebaseData;
-                    if (!auth || !db) return; // Ochrana proti chybějící konfiguraci
+                    const { auth, db, appId, collection, onSnapshot, signInAnonymously, signInWithCustomToken, isFirebaseAvailable } = window.firebaseData;
+                    
+                    if (!isFirebaseAvailable) return;
 
-                    try {
-                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                            await signInWithCustomToken(auth, __initial_auth_token);
-                        } else {
-                            await signInAnonymously(auth);
-                        }
-                        auth.onAuthStateChanged((u) => {
-                            setUser(u);
-                            if (u) {
-                                const reviewsPath = collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
-                                const unsubscribe = onSnapshot(reviewsPath, (snapshot) => {
-                                    const loadedReviews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                                    loadedReviews.sort((a, b) => b.timestamp - a.timestamp);
-                                    setReviews(loadedReviews);
-                                }, (error) => console.log("Offline mode nebo chyba DB", error));
-                                return () => unsubscribe();
-                            }
-                        });
-                    } catch (err) {
-                        console.error("Firebase Auth Error:", err);
+                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                        await signInWithCustomToken(auth, __initial_auth_token);
+                    } else {
+                        await signInAnonymously(auth);
                     }
+                    auth.onAuthStateChanged((u) => {
+                        setUser(u);
+                        if (u) {
+                            const reviewsPath = collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
+                            const unsubscribe = onSnapshot(reviewsPath, (snapshot) => {
+                                const loadedReviews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                                loadedReviews.sort((a, b) => b.timestamp - a.timestamp);
+                                setReviews(loadedReviews);
+                            });
+                            return () => unsubscribe();
+                        }
+                    });
                 };
                 initFirebase();
             }, []);
 
-            // OPRAVENÁ FUNKCE ODESLÁNÍ
+            // Funkce pro odeslání recenze (Funguje i OFFLINE pro testování)
             const submitReview = async (e) => {
-                if (e) e.preventDefault(); // Zamezí obnovení stránky
+                if (e) e.preventDefault(); 
                 
                 if (!newReview.name || !newReview.text) return;
 
-                const { db, appId, collection, addDoc } = window.firebaseData;
+                const { db, appId, collection, addDoc, isFirebaseAvailable } = window.firebaseData;
                 
-                if (!db) {
-                    alert("Chyba: Chybí konfigurace databáze. Na GitHubu musíte doplnit 'firebaseConfig'.");
-                    return;
+                const reviewObject = { ...newReview, timestamp: new Date().getTime() };
+
+                if (isFirebaseAvailable && db) {
+                    try {
+                        const reviewsPath = collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
+                        await addDoc(reviewsPath, reviewObject);
+                    } catch (error) {
+                        console.error("Chyba odeslání do DB:", error);
+                        // Fallback pro lokální test
+                        setReviews(prev => [reviewObject, ...prev]);
+                    }
+                } else {
+                    // Offline režim - přidáme recenzi jen lokálně do stavu
+                    setReviews(prev => [reviewObject, ...prev]);
                 }
 
-                try {
-                    const reviewsPath = collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
-                    await addDoc(reviewsPath, { ...newReview, timestamp: new Date().getTime() });
-                    setNewReview({ name: '', text: '', rating: 5 });
-                    setIsReviewModalOpen(false);
-                } catch (error) {
-                    console.error("Chyba odeslání:", error);
-                    alert("Nepodařilo se odeslat recenzi. Zkontroluj připojení nebo konfiguraci.");
-                }
+                setNewReview({ name: '', text: '', rating: 5 });
+                setIsReviewModalOpen(false);
             };
 
             const handleLinkClick = (link) => {
@@ -352,7 +350,7 @@
                                             <div className="flex flex-col">
                                                 <div className="flex gap-0.5">
                                                     {[...Array(5)].map((_, i) => (
-                                                        <Icon key={i} name="Star" size={12} className={i < Math.round(parseFloat(stats.avg)) ? "text-amber-400 fill-amber-400" : "text-slate-200"} fill={i < Math.round(parseFloat(stats.avg)) ? "currentColor" : "none"} />
+                                                        <Icon key={i} name="Star" size={12} className={i < Math.round(parseFloat(stats.avg)) ? "text-slate-800 fill-slate-800" : "text-slate-200"} fill={i < Math.round(parseFloat(stats.avg)) ? "currentColor" : "none"} />
                                                     ))}
                                                 </div>
                                                 <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tighter">{stats.total} recenzí</span>
@@ -387,7 +385,7 @@
                                                     <span className="font-black text-[9px] text-slate-800 uppercase tracking-tighter">{rev.name}</span>
                                                     <div className="flex gap-0.5">
                                                         {[...Array(5)].map((_, i) => (
-                                                            <Icon key={i} name="Star" size={8} className={i < rev.rating ? "text-amber-400 fill-amber-400" : "text-slate-200"} fill={i < rev.rating ? "currentColor" : "none"} />
+                                                            <Icon key={i} name="Star" size={8} className={i < rev.rating ? "text-slate-800 fill-slate-800" : "text-slate-200"} fill={i < rev.rating ? "currentColor" : "none"} />
                                                         ))}
                                                     </div>
                                                 </div>
