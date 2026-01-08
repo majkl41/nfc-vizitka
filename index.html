@@ -41,7 +41,6 @@
         .progress-bar-fill {
             transition: width 1s ease-in-out;
         }
-        /* Oprava pro mobily - aby modál nebyl příliš vysoký */
         .modal-content {
             max-height: 85vh;
         }
@@ -257,7 +256,7 @@
                                     return (
                                         <div key={link.id} className="relative group">
                                             <button onClick={() => isEditMode ? openEdit(index) : handleLinkClick(link)} className={`w-full aspect-square flex flex-col items-center justify-center gap-3 p-5 rounded-[2.8rem] transition-all duration-500 relative overflow-hidden ${style.color} ${!isEditMode ? 'hover:scale-[1.05]' : 'hover:-translate-y-1 ring-2 ring-transparent hover:ring-white/50'}`}>
-                                                <div className="relative z-10 w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-md p-3 transition-transform duration-500 group-hover:scale-110">
+                                                <div className="relative z-10 w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-md p-3">
                                                     {link.customIconUrl ? <img src={link.customIconUrl} className="w-full h-full object-contain" /> : style.logo ? <img src={style.logo} className="w-full h-full object-contain" /> : <div className="text-slate-400"><Icon name={style.fallbackIcon} size={32} /></div>}
                                                 </div>
                                                 <span className={`text-[10px] font-black uppercase tracking-[0.1em] z-10 truncate w-full px-1 ${link.platformId === 'snapchat' ? 'text-black' : 'text-white'}`}>{link.name}</span>
@@ -269,7 +268,7 @@
                             </div>
                         </div>
 
-                        {/* DASHBOARD RECENZÍ */}
+                        {/* DASHBOARD RECENZÍ (Bez řádku pro výběr) */}
                         <div className="px-8 pt-4 pb-4 space-y-6">
                             <div className="bg-slate-50/80 rounded-[2.5rem] p-6 border border-slate-100 shadow-inner space-y-5">
                                 <div className="flex justify-between items-end">
@@ -300,21 +299,6 @@
                                                 </div>
                                             );
                                         })}
-                                    </div>
-                                </div>
-
-                                {/* RUČNÍ VOLBA HVĚZD */}
-                                <div className="pt-4 border-t border-slate-200 text-center">
-                                    <div className="flex justify-center gap-2">
-                                        {[1, 2, 3, 4, 5].map(num => (
-                                            <button 
-                                                key={num} 
-                                                onClick={() => { setNewReview({...newReview, rating: num}); !isEditMode && setIsReviewModalOpen(true); }}
-                                                className={`star-button group p-1 ${newReview.rating >= num ? 'text-amber-400' : 'text-slate-200'}`}
-                                            >
-                                                <Icon name="Star" size={44} className="group-hover:text-amber-400 transition-colors" fill={newReview.rating >= num ? "currentColor" : "none"} />
-                                            </button>
-                                        ))}
                                     </div>
                                 </div>
                             </div>
