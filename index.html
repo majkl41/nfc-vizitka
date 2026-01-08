@@ -42,7 +42,7 @@
             transition: width 1s ease-in-out;
         }
         .modal-content {
-            max-height: 90vh; /* Zvýšeno pro lepší prostor na mobilu */
+            max-height: 85vh;
         }
     </style>
 </head>
@@ -55,11 +55,33 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, doc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-        const firebaseConfig = JSON.parse(__firebase_config);
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
-        const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // TADY JE MÍSTO PRO TVOU KONFIGURACI PRO GITHUB
+        // Pokud jsi na GitHubu, kód použije to, co je v 'else'.
+        let firebaseConfig;
+        if (typeof __firebase_config !== 'undefined') {
+            firebaseConfig = JSON.parse(__firebase_config);
+        } else {
+            // !!! ZDE VLOŽ SVÉ ÚDAJE Z FIREBASE KONZOLE !!!
+            firebaseConfig = {
+                apiKey: "API_KEY_Z_FIREBASE",
+                authDomain: "TVUJ_PROJEKT.firebaseapp.com",
+                projectId: "TVUJ_PROJEKT_ID",
+                storageBucket: "TVUJ_PROJEKT.appspot.com",
+                messagingSenderId: "CISLO",
+                appId: "APP_ID"
+            };
+        }
+
+        let app, auth, db, appId;
+        
+        try {
+            app = initializeApp(firebaseConfig);
+            auth = getAuth(app);
+            db = getFirestore(app);
+            appId = (typeof __app_id !== 'undefined') ? __app_id : 'nfc-vizitka-public';
+        } catch (e) {
+            console.error("Chyba inicializace Firebase:", e);
+        }
 
         window.firebaseData = { auth, db, appId, collection, addDoc, onSnapshot, query, doc, signInAnonymously, signInWithCustomToken };
     </script>
@@ -144,41 +166,54 @@
             useEffect(() => {
                 const initFirebase = async () => {
                     const { auth, db, appId, collection, onSnapshot, signInAnonymously, signInWithCustomToken } = window.firebaseData;
-                    if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                        await signInWithCustomToken(auth, __initial_auth_token);
-                    } else {
-                        await signInAnonymously(auth);
-                    }
-                    auth.onAuthStateChanged((u) => {
-                        setUser(u);
-                        if (u) {
-                            const reviewsPath = collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
-                            const unsubscribe = onSnapshot(reviewsPath, (snapshot) => {
-                                const loadedReviews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-                                loadedReviews.sort((a, b) => b.timestamp - a.timestamp);
-                                setReviews(loadedReviews);
-                            });
-                            return () => unsubscribe();
+                    if (!auth || !db) return; // Ochrana proti chybějící konfiguraci
+
+                    try {
+                        if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                            await signInWithCustomToken(auth, __initial_auth_token);
+                        } else {
+                            await signInAnonymously(auth);
                         }
-                    });
+                        auth.onAuthStateChanged((u) => {
+                            setUser(u);
+                            if (u) {
+                                const reviewsPath = collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
+                                const unsubscribe = onSnapshot(reviewsPath, (snapshot) => {
+                                    const loadedReviews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                                    loadedReviews.sort((a, b) => b.timestamp - a.timestamp);
+                                    setReviews(loadedReviews);
+                                }, (error) => console.log("Offline mode nebo chyba DB", error));
+                                return () => unsubscribe();
+                            }
+                        });
+                    } catch (err) {
+                        console.error("Firebase Auth Error:", err);
+                    }
                 };
                 initFirebase();
             }, []);
 
-            // OPRAVA ODESÍLÁNÍ - Tlačítko je nyní 'button' a volá funkci přímo
-            const submitReview = async () => {
+            // OPRAVENÁ FUNKCE ODESLÁNÍ
+            const submitReview = async (e) => {
+                if (e) e.preventDefault(); // Zamezí obnovení stránky
+                
                 if (!newReview.name || !newReview.text) return;
-                
+
                 const { db, appId, collection, addDoc } = window.firebaseData;
-                const reviewsPath = collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
                 
+                if (!db) {
+                    alert("Chyba: Chybí konfigurace databáze. Na GitHubu musíte doplnit 'firebaseConfig'.");
+                    return;
+                }
+
                 try {
+                    const reviewsPath = collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
                     await addDoc(reviewsPath, { ...newReview, timestamp: new Date().getTime() });
                     setNewReview({ name: '', text: '', rating: 5 });
                     setIsReviewModalOpen(false);
                 } catch (error) {
-                    console.error("Chyba při odesílání:", error);
-                    alert("Nepodařilo se odeslat recenzi. Zkus to prosím znovu.");
+                    console.error("Chyba odeslání:", error);
+                    alert("Nepodařilo se odeslat recenzi. Zkontroluj připojení nebo konfiguraci.");
                 }
             };
 
@@ -226,7 +261,6 @@
                 setImgErrors(prev => ({ ...prev, [id]: true }));
             };
 
-            // VALIDACE PRO TLAČÍTKO
             const isFormValid = newReview.name.trim().length > 0 && newReview.text.trim().length > 0;
 
             return (
@@ -307,9 +341,9 @@
                             </div>
                         </div>
 
-                        {/* DASHBOARD RECENZÍ - JANTAROVÝ */}
+                        {/* DASHBOARD RECENZÍ - ZPĚT NA SLATE-50 */}
                         <div className="px-8 pt-4 pb-4 space-y-6">
-                            <div className="bg-amber-50 rounded-[2.5rem] p-6 border border-amber-100 shadow-sm space-y-5">
+                            <div className="bg-slate-50 rounded-[2.5rem] p-6 border border-slate-100 shadow-sm space-y-5">
                                 <div className="flex justify-between items-end">
                                     <div className="text-left space-y-1">
                                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Průměr</h4>
@@ -333,7 +367,7 @@
                                                 <div key={i} className="flex items-center gap-2">
                                                     <span className="text-[8px] font-bold text-slate-400 w-3 text-right">{5-i}</span>
                                                     <div className="flex-1 h-1 bg-slate-200 rounded-full overflow-hidden">
-                                                        <div className="h-full bg-amber-400 progress-bar-fill" style={{ width: `${percent}%` }}></div>
+                                                        <div className="h-full bg-slate-800 progress-bar-fill" style={{ width: `${percent}%` }}></div>
                                                     </div>
                                                 </div>
                                             );
@@ -368,9 +402,9 @@
                         <div className="mt-auto px-8 py-4 bg-slate-50/50 border-t border-slate-50 text-center">
                             <button 
                                 onClick={() => !isEditMode && setIsReviewModalOpen(true)}
-                                className="w-full bg-amber-400 text-white font-black py-4 rounded-[1.8rem] shadow-lg flex items-center justify-center gap-3 text-sm tracking-widest hover:bg-amber-500 transition-all active:scale-95 text-white mb-3"
+                                className="w-full bg-white text-slate-900 border-2 border-slate-100 font-black py-4 rounded-[1.8rem] shadow-sm flex items-center justify-center gap-3 text-sm tracking-widest hover:bg-slate-50 transition-all active:scale-95 mb-3"
                             >
-                                <Icon name="Star" size={20} className="fill-white" /> NAPSAT RECENZI
+                                <Icon name="Star" size={20} className="text-slate-900" /> NAPSAT RECENZI
                             </button>
                             <button 
                                 onClick={() => !isEditMode && window.print()}
@@ -382,7 +416,7 @@
                         </div>
                     </div>
 
-                    {/* MODÁL PRO DOKONČENÍ RECENZE (OPRAVENO ODESÍLÁNÍ NA MOBILU) */}
+                    {/* MODÁL PRO DOKONČENÍ RECENZE (Černé hvězdy) */}
                     {isReviewModalOpen && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-md">
                             <div className="bg-white rounded-[3.5rem] w-full max-w-md p-6 sm:p-10 shadow-2xl animate-in zoom-in-95 duration-200 modal-content overflow-y-auto">
@@ -390,7 +424,7 @@
                                     <h3 className="text-xl font-black uppercase text-slate-800 tracking-tight">Odeslat hodnocení</h3>
                                     <button onClick={() => setIsReviewModalOpen(false)} className="p-3 bg-slate-100 rounded-full text-slate-400 hover:text-red-500 active:scale-90"><Icon name="X" size={24} /></button>
                                 </div>
-                                <div className="space-y-6 text-center">
+                                <form onSubmit={submitReview} className="space-y-6 text-center">
                                     <div className="space-y-4 bg-slate-50 p-4 sm:p-6 rounded-3xl border border-slate-100">
                                         <div className="flex justify-center gap-2 mb-2">
                                             {[1, 2, 3, 4, 5].map(num => (
@@ -398,9 +432,9 @@
                                                     key={num} 
                                                     type="button" 
                                                     onClick={() => setNewReview({...newReview, rating: num})} 
-                                                    className={`star-button transform ${newReview.rating >= num ? 'text-amber-400 scale-110' : 'text-slate-200'}`}
+                                                    className={`star-button transform ${newReview.rating >= num ? 'text-slate-900 scale-110' : 'text-slate-200'}`}
                                                 >
-                                                    <Icon name="Star" size={window.innerWidth < 640 ? 56 : 72} className={newReview.rating >= num ? "fill-amber-400" : ""} fill={newReview.rating >= num ? "currentColor" : "none"} />
+                                                    <Icon name="Star" size={window.innerWidth < 640 ? 56 : 72} className={newReview.rating >= num ? "fill-slate-900" : ""} fill={newReview.rating >= num ? "currentColor" : "none"} />
                                                 </button>
                                             ))}
                                         </div>
@@ -410,14 +444,14 @@
                                             type="text" 
                                             placeholder="Tvoje jméno / Firma" 
                                             required 
-                                            className="w-full p-5 bg-slate-50 rounded-[1.5rem] outline-none border-2 border-transparent focus:border-amber-400 font-bold" 
+                                            className="w-full p-5 bg-slate-50 rounded-[1.5rem] outline-none border-2 border-transparent focus:border-slate-900 font-bold" 
                                             value={newReview.name} 
                                             onChange={(e) => setNewReview({...newReview, name: e.target.value})} 
                                         />
                                         <textarea 
                                             placeholder="Zde napiš svou zkušenost s podnikatelem..." 
                                             required 
-                                            className="w-full p-5 bg-slate-50 rounded-[1.5rem] outline-none border-2 border-transparent focus:border-amber-400 h-24 sm:h-32 font-bold resize-none" 
+                                            className="w-full p-5 bg-slate-50 rounded-[1.5rem] outline-none border-2 border-transparent focus:border-slate-900 h-24 sm:h-32 font-bold resize-none" 
                                             value={newReview.text} 
                                             onChange={(e) => setNewReview({...newReview, text: e.target.value})} 
                                         />
@@ -426,11 +460,11 @@
                                         type="button"
                                         onClick={submitReview}
                                         disabled={!isFormValid}
-                                        className={`w-full text-white font-black py-6 rounded-[2rem] uppercase tracking-widest shadow-2xl transition-all ${isFormValid ? 'bg-amber-400 active:scale-95 shadow-amber-200' : 'bg-slate-300 cursor-not-allowed'}`}
+                                        className={`w-full text-white font-black py-6 rounded-[2rem] uppercase tracking-widest shadow-2xl transition-all ${isFormValid ? 'bg-slate-900 active:scale-95 shadow-slate-200' : 'bg-slate-300 cursor-not-allowed'}`}
                                     >
                                         Odeslat hodnocení
                                     </button>
-                                </div>
+                                </form>
                             </div>
                         </div>
                     )}
