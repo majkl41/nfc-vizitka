@@ -42,7 +42,7 @@
             transition: width 1s ease-in-out;
         }
         .modal-content {
-            max-height: 85vh;
+            max-height: 90vh; /* Zvýšeno pro lepší prostor na mobilu */
         }
     </style>
 </head>
@@ -165,14 +165,21 @@
                 initFirebase();
             }, []);
 
-            const submitReview = async (e) => {
-                e.preventDefault();
+            // OPRAVA ODESÍLÁNÍ - Tlačítko je nyní 'button' a volá funkci přímo
+            const submitReview = async () => {
                 if (!newReview.name || !newReview.text) return;
+                
                 const { db, appId, collection, addDoc } = window.firebaseData;
                 const reviewsPath = collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
-                await addDoc(reviewsPath, { ...newReview, timestamp: new Date().getTime() });
-                setNewReview({ name: '', text: '', rating: 5 });
-                setIsReviewModalOpen(false);
+                
+                try {
+                    await addDoc(reviewsPath, { ...newReview, timestamp: new Date().getTime() });
+                    setNewReview({ name: '', text: '', rating: 5 });
+                    setIsReviewModalOpen(false);
+                } catch (error) {
+                    console.error("Chyba při odesílání:", error);
+                    alert("Nepodařilo se odeslat recenzi. Zkus to prosím znovu.");
+                }
             };
 
             const handleLinkClick = (link) => {
@@ -191,6 +198,7 @@
             const [editingIndex, setEditingIndex] = useState(null);
             const [tempItem, setTempItem] = useState({ platformId: 'web', name: '', url: '', customIconUrl: '' });
             const [isEditingProfile, setIsEditingProfile] = useState(false);
+            const [imgErrors, setImgErrors] = useState({});
 
             const selectPlatform = (p) => {
                 setTempItem({
@@ -210,6 +218,15 @@
                 setEditingIndex(null);
             };
 
+            const getPlatformStyle = (platformId) => {
+                return platforms.find(p => p.id === platformId) || platforms[platforms.length - 1];
+            };
+
+            const handleImageError = (id) => {
+                setImgErrors(prev => ({ ...prev, [id]: true }));
+            };
+
+            // VALIDACE PRO TLAČÍTKO
             const isFormValid = newReview.name.trim().length > 0 && newReview.text.trim().length > 0;
 
             return (
@@ -230,6 +247,7 @@
 
                     <div className="w-full max-w-[390px] bg-white sm:rounded-[3.5rem] shadow-2xl overflow-hidden min-h-screen sm:min-h-0 flex flex-col border border-slate-100 relative pb-10">
                         
+                        {/* Header s fotkou */}
                         <div className="h-32 bg-slate-900 relative">
                             <div className="absolute -bottom-14 left-1/2 -translate-x-1/2">
                                 <div className={`relative group ${isEditMode ? 'cursor-pointer active:scale-95' : 'cursor-default'}`} onClick={() => isEditMode && setIsEditingProfile(true)}>
@@ -244,7 +262,7 @@
                             <p className="text-[11px] font-bold text-blue-600 uppercase tracking-[0.2em]">{profile.title}</p>
                             <p className="text-slate-400 text-sm px-4 pt-2 leading-relaxed font-medium italic">"{profile.bio}"</p>
                             
-                            {/* KONTAKTNÍ TLAČÍTKA - NYNÍ SJEDNOCENÁ BARVA (SLATE-50) */}
+                            {/* KONTAKTNÍ TLAČÍTKA - SVĚTLÁ BARVA (SLATE-50) */}
                             <div className="flex flex-col gap-3 pt-5 px-2 w-full">
                                 {profile.email && (
                                     <a 
@@ -267,15 +285,18 @@
                             </div>
                         </div>
 
+                        {/* Mřížka s odkazy */}
                         <div className="px-8 pt-8 pb-4">
                             <div className="grid grid-cols-2 gap-6">
                                 {links.map((link, index) => {
-                                    const style = platforms.find(p => p.id === link.platformId) || platforms[platforms.length - 1];
+                                    const style = getPlatformStyle(link.platformId);
+                                    const hasError = imgErrors[link.id];
+                                    
                                     return (
                                         <div key={link.id} className="relative group">
                                             <button onClick={() => isEditMode ? openEdit(index) : handleLinkClick(link)} className={`w-full aspect-square flex flex-col items-center justify-center gap-3 p-5 rounded-[2.8rem] transition-all duration-500 relative overflow-hidden ${style.color} ${!isEditMode ? 'hover:scale-[1.05]' : 'hover:-translate-y-1 ring-2 ring-transparent hover:ring-white/50'}`}>
                                                 <div className="relative z-10 w-16 h-16 bg-white rounded-3xl flex items-center justify-center shadow-md p-3 transition-transform duration-500 group-hover:scale-110">
-                                                    {link.customIconUrl ? <img src={link.customIconUrl} className="w-full h-full object-contain" /> : style.logo ? <img src={style.logo} className="w-full h-full object-contain" /> : <div className="text-slate-400"><Icon name={style.fallbackIcon} size={32} /></div>}
+                                                    {link.customIconUrl ? <img src={link.customIconUrl} className="w-full h-full object-contain" /> : style.logo && !hasError ? <img src={style.logo} className="w-full h-full object-contain" onError={() => handleImageError(link.id)} /> : <div className="text-slate-400"><Icon name={style.fallbackIcon} size={32} /></div>}
                                                 </div>
                                                 <span className={`text-[10px] font-black uppercase tracking-[0.1em] z-10 truncate w-full px-1 ${link.platformId === 'snapchat' ? 'text-black' : 'text-white'}`}>{link.name}</span>
                                                 {isEditMode && <div className="absolute top-4 right-4 z-20 text-white/80 animate-pulse"><Icon name="Edit2" size={14} /></div>}
@@ -286,9 +307,9 @@
                             </div>
                         </div>
 
-                        {/* DASHBOARD RECENZÍ - ZPĚT NA SLATE-50 */}
+                        {/* DASHBOARD RECENZÍ - JANTAROVÝ */}
                         <div className="px-8 pt-4 pb-4 space-y-6">
-                            <div className="bg-slate-50 rounded-[2.5rem] p-6 border border-slate-100 shadow-sm space-y-5">
+                            <div className="bg-amber-50 rounded-[2.5rem] p-6 border border-amber-100 shadow-sm space-y-5">
                                 <div className="flex justify-between items-end">
                                     <div className="text-left space-y-1">
                                         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Průměr</h4>
@@ -361,7 +382,7 @@
                         </div>
                     </div>
 
-                    {/* MODÁL PRO DOKONČENÍ RECENZE */}
+                    {/* MODÁL PRO DOKONČENÍ RECENZE (OPRAVENO ODESÍLÁNÍ NA MOBILU) */}
                     {isReviewModalOpen && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-md">
                             <div className="bg-white rounded-[3.5rem] w-full max-w-md p-6 sm:p-10 shadow-2xl animate-in zoom-in-95 duration-200 modal-content overflow-y-auto">
@@ -369,7 +390,7 @@
                                     <h3 className="text-xl font-black uppercase text-slate-800 tracking-tight">Odeslat hodnocení</h3>
                                     <button onClick={() => setIsReviewModalOpen(false)} className="p-3 bg-slate-100 rounded-full text-slate-400 hover:text-red-500 active:scale-90"><Icon name="X" size={24} /></button>
                                 </div>
-                                <form onSubmit={submitReview} className="space-y-6 text-center">
+                                <div className="space-y-6 text-center">
                                     <div className="space-y-4 bg-slate-50 p-4 sm:p-6 rounded-3xl border border-slate-100">
                                         <div className="flex justify-center gap-2 mb-2">
                                             {[1, 2, 3, 4, 5].map(num => (
@@ -402,13 +423,14 @@
                                         />
                                     </div>
                                     <button 
-                                        type="submit" 
+                                        type="button"
+                                        onClick={submitReview}
                                         disabled={!isFormValid}
                                         className={`w-full text-white font-black py-6 rounded-[2rem] uppercase tracking-widest shadow-2xl transition-all ${isFormValid ? 'bg-amber-400 active:scale-95 shadow-amber-200' : 'bg-slate-300 cursor-not-allowed'}`}
                                     >
                                         Odeslat hodnocení
                                     </button>
-                                </form>
+                                </div>
                             </div>
                         </div>
                     )}
