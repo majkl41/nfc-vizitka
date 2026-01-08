@@ -18,7 +18,7 @@
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
         
         :root {
-            color-scheme: light; /* Zabrání automatickému tmavému režimu prohlížeče */
+            color-scheme: light;
         }
         
         body { 
@@ -56,18 +56,22 @@
 <body>
     <div id="root"></div>
 
-    <!-- Firebase SDK -->
+    <!-- Firebase SDK - Bezpečné načtení -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, doc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-        const firebaseConfig = JSON.parse(__firebase_config);
-        
-        let app, auth, db, appId;
+        // Bezpečné načtení konfigurace
+        let firebaseConfig = null;
         let isFirebaseAvailable = false;
-        
+        let app, auth, db, appId;
+
         try {
+            if (typeof __firebase_config !== 'undefined') {
+                firebaseConfig = JSON.parse(__firebase_config);
+            }
+            
             if (firebaseConfig && firebaseConfig.apiKey && firebaseConfig.apiKey !== "API_KEY_Z_FIREBASE") {
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
@@ -79,7 +83,19 @@
             console.log("Běžím v offline režimu.");
         }
 
-        window.firebaseData = { auth, db, appId, collection, addDoc, onSnapshot, query, doc, signInAnonymously, signInWithCustomToken, isFirebaseAvailable };
+        window.firebaseData = { 
+            auth, 
+            db, 
+            appId, 
+            collection, 
+            addDoc, 
+            onSnapshot, 
+            query, 
+            doc, 
+            signInAnonymously, 
+            signInWithCustomToken, 
+            isFirebaseAvailable 
+        };
     </script>
 
     <script type="text/babel">
@@ -92,7 +108,6 @@
             
             if (!LucideIcon) {
                 if (name === "X") return <span style={{fontSize: size + 'px', lineHeight: 1, fontWeight: 'bold'}}>✕</span>;
-                // Oprava barvy hvězdy pro fallback
                 if (name === "Star") return <span style={{fontSize: size + 'px', lineHeight: 1, color: className.includes('amber') ? '#fbbf24' : '#e5e7eb'}}>★</span>;
                 return null;
             }
@@ -104,6 +119,7 @@
             const [isEditMode, setIsEditMode] = useState(false);
             const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
             
+            // Načtení recenzí z LocalStorage (pro fungování bez databáze)
             const [reviews, setReviews] = useState(() => {
                 const saved = localStorage.getItem('my_nfc_reviews');
                 return saved ? JSON.parse(saved) : [];
@@ -165,6 +181,7 @@
                 };
             }, [reviews]);
 
+            // Ukládání recenzí do LocalStorage (pro offline funkčnost)
             useEffect(() => {
                 localStorage.setItem('my_nfc_reviews', JSON.stringify(reviews));
             }, [reviews]);
@@ -200,8 +217,10 @@
                 initFirebase();
             }, []);
 
-            // Opravená funkce odeslání - nepoužívá form submit event
+            // OPRAVENÁ FUNKCE PRO ODESÍLÁNÍ
             const submitReview = async () => {
+                // Žádné e.preventDefault(), protože to nevoláme přes onSubmit formuláře
+                
                 if (!newReview.name || !newReview.text) return;
 
                 const reviewObject = { 
@@ -210,22 +229,25 @@
                     timestamp: new Date().getTime() 
                 };
 
-                const { db, appId, collection, addDoc, isFirebaseAvailable } = window.firebaseData;
-                
-                // Vždy uložíme lokálně pro okamžitou zpětnou vazbu
+                // 1. Okamžitě uložit do stavu (zobrazí se hned na obrazovce)
                 setReviews(prev => [reviewObject, ...prev]);
 
+                // 2. Reset formuláře a zavření okna
+                setNewReview({ name: '', text: '', rating: 5 });
+                setIsReviewModalOpen(false);
+
+                // 3. Pokus o uložení do databáze (pokud je připojená)
+                const { db, appId, collection, addDoc, isFirebaseAvailable } = window.firebaseData;
                 if (isFirebaseAvailable && db) {
                     try {
                         const reviewsPath = collection(db, 'artifacts', appId, 'public', 'data', 'reviews');
-                        await addDoc(reviewsPath, { ...newReview, timestamp: new Date().getTime() });
+                        const docData = { ...reviewObject };
+                        delete docData.id; // DB si vytvoří vlastní ID
+                        await addDoc(reviewsPath, docData);
                     } catch (error) {
                         console.error("Chyba odeslání do DB (nevadí, uloženo lokálně):", error);
                     }
                 }
-
-                setNewReview({ name: '', text: '', rating: 5 });
-                setIsReviewModalOpen(false);
             };
 
             const handleLinkClick = (link) => {
@@ -272,6 +294,7 @@
                 setImgErrors(prev => ({ ...prev, [id]: true }));
             };
 
+            // Validace pro tlačítko
             const isFormValid = newReview.name.trim().length > 0 && newReview.text.trim().length > 0;
 
             return (
@@ -352,7 +375,7 @@
                             </div>
                         </div>
 
-                        {/* DASHBOARD RECENZÍ - ŽLUTÉ HVĚZDY ZPĚT */}
+                        {/* DASHBOARD RECENZÍ - ZPĚT NA SLATE-50 */}
                         <div className="px-8 pt-4 pb-4 space-y-6">
                             <div className="bg-slate-50 rounded-[2.5rem] p-6 border border-slate-100 shadow-sm space-y-5">
                                 <div className="flex justify-between items-end">
@@ -427,7 +450,7 @@
                         </div>
                     </div>
 
-                    {/* MODÁL PRO DOKONČENÍ RECENZE - ŽLUTÉ HVĚZDY */}
+                    {/* MODÁL PRO DOKONČENÍ RECENZE (Žluté hvězdy) */}
                     {isReviewModalOpen && (
                         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/95 backdrop-blur-md">
                             <div className="bg-white rounded-[3.5rem] w-full max-w-md p-6 sm:p-10 shadow-2xl animate-in zoom-in-95 duration-200 modal-content overflow-y-auto">
@@ -435,6 +458,7 @@
                                     <h3 className="text-xl font-black uppercase text-slate-800 tracking-tight">Odeslat hodnocení</h3>
                                     <button onClick={() => setIsReviewModalOpen(false)} className="p-3 bg-slate-100 rounded-full text-slate-400 hover:text-red-500 active:scale-90"><Icon name="X" size={24} /></button>
                                 </div>
+                                {/* ODSTRANĚN FORM TAG - PŘÍMÉ VOLÁNÍ FUNKCE */}
                                 <div className="space-y-6 text-center">
                                     <div className="space-y-4 bg-slate-50 p-4 sm:p-6 rounded-3xl border border-slate-100">
                                         <div className="flex justify-center gap-2 mb-2">
