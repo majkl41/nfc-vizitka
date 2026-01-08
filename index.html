@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Vynucení světlého vzhledu i na telefonech s Dark Mode -->
+    <meta name="color-scheme" content="light only">
     <title>Moje NFC Vizitka</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -14,6 +16,11 @@
     <script src="https://unpkg.com/lucide-react@0.344.0/dist/umd/lucide-react.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;900&display=swap');
+        
+        :root {
+            color-scheme: light; /* Zabrání automatickému tmavému režimu prohlížeče */
+        }
+        
         body { 
             font-family: 'Inter', sans-serif; 
             background-color: #f8fafc;
@@ -55,17 +62,12 @@
         import { getAuth, signInAnonymously, onAuthStateChanged, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
         import { getFirestore, collection, addDoc, onSnapshot, query, doc } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-firestore.js";
 
-        // Bezpečné načtení konfigurace
-        let firebaseConfig = null;
-        let isFirebaseAvailable = false;
+        const firebaseConfig = JSON.parse(__firebase_config);
+        
         let app, auth, db, appId;
-
+        let isFirebaseAvailable = false;
+        
         try {
-            if (typeof __firebase_config !== 'undefined') {
-                firebaseConfig = JSON.parse(__firebase_config);
-            }
-            
-            // Pokud máme config, inicializujeme Firebase
             if (firebaseConfig && firebaseConfig.apiKey && firebaseConfig.apiKey !== "API_KEY_Z_FIREBASE") {
                 app = initializeApp(firebaseConfig);
                 auth = getAuth(app);
@@ -74,35 +76,26 @@
                 isFirebaseAvailable = true;
             }
         } catch (e) {
-            console.log("Běžím v offline režimu (bez Firebase).");
+            console.log("Běžím v offline režimu.");
         }
 
-        window.firebaseData = { 
-            auth, 
-            db, 
-            appId, 
-            collection, 
-            addDoc, 
-            onSnapshot, 
-            query, 
-            doc, 
-            signInAnonymously, 
-            signInWithCustomToken, 
-            isFirebaseAvailable 
-        };
+        window.firebaseData = { auth, db, appId, collection, addDoc, onSnapshot, query, doc, signInAnonymously, signInWithCustomToken, isFirebaseAvailable };
     </script>
 
     <script type="text/babel">
         window.React = React;
         const { useState, useEffect, useMemo } = React;
         
+        // UPRAVENÁ KOMPONENTA ICON - Používá currentColor pro spolehlivou barvu
         const Icon = ({ name, size = 24, className = "", fill = "none" }) => {
             const lib = window.lucideReact || window.LucideReact || window.lucide || {};
             const LucideIcon = lib[name];
             
+            // Fallback na textové znaky, pokud se knihovna nenačte
             if (!LucideIcon) {
                 if (name === "X") return <span style={{fontSize: size + 'px', lineHeight: 1, fontWeight: 'bold'}}>✕</span>;
-                if (name === "Star") return <span style={{fontSize: size + 'px', lineHeight: 1, color: className.includes('slate-900') ? '#0f172a' : '#e5e7eb'}}>★</span>;
+                // Hvězda bere barvu z rodiče (currentColor)
+                if (name === "Star") return <span style={{fontSize: size + 'px', lineHeight: 1, color: 'currentColor'}}>★</span>;
                 return null;
             }
             
@@ -113,7 +106,6 @@
             const [isEditMode, setIsEditMode] = useState(false);
             const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
             
-            // Načtení recenzí z LocalStorage (pro fungování bez databáze)
             const [reviews, setReviews] = useState(() => {
                 const saved = localStorage.getItem('my_nfc_reviews');
                 return saved ? JSON.parse(saved) : [];
@@ -175,13 +167,11 @@
                 };
             }, [reviews]);
 
-            // Ukládání recenzí do LocalStorage při změně (pro offline funkčnost)
             useEffect(() => {
                 localStorage.setItem('my_nfc_reviews', JSON.stringify(reviews));
             }, [reviews]);
 
             useEffect(() => {
-                // Pokus o připojení k Firebase (pokud existuje config)
                 const initFirebase = async () => {
                     const { auth, db, appId, collection, onSnapshot, signInAnonymously, signInWithCustomToken, isFirebaseAvailable } = window.firebaseData;
                     
@@ -200,7 +190,7 @@
                                 const unsubscribe = onSnapshot(reviewsPath, (snapshot) => {
                                     const loadedReviews = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                                     loadedReviews.sort((a, b) => b.timestamp - a.timestamp);
-                                    setReviews(loadedReviews); // Přepíše lokální, pokud je DB dostupná
+                                    setReviews(loadedReviews);
                                 });
                                 return () => unsubscribe();
                             }
@@ -212,7 +202,6 @@
                 initFirebase();
             }, []);
 
-            // Funkce pro odeslání recenze
             const submitReview = async (e) => {
                 if(e) e.preventDefault(); 
                 
@@ -396,6 +385,21 @@
                                                 </div>
                                             );
                                         })}
+                                    </div>
+                                </div>
+
+                                {/* RUČNÍ VOLBA HVĚZD */}
+                                <div className="pt-4 border-t border-slate-200 text-center">
+                                    <div className="flex justify-center gap-2">
+                                        {[1, 2, 3, 4, 5].map(num => (
+                                            <button 
+                                                key={num} 
+                                                onClick={() => { setNewReview({...newReview, rating: num}); !isEditMode && setIsReviewModalOpen(true); }}
+                                                className={`star-button group p-1 ${newReview.rating >= num ? 'text-slate-800' : 'text-slate-200'}`}
+                                            >
+                                                <Icon name="Star" size={50} className="group-hover:text-slate-800 transition-colors" fill={newReview.rating >= num ? "currentColor" : "none"} />
+                                            </button>
+                                        ))}
                                     </div>
                                 </div>
                             </div>
